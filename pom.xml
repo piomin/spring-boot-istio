@@ -6,7 +6,7 @@
 
 	<groupId>com.github.piomin</groupId>
 	<artifactId>spring-boot-istio</artifactId>
-	<version>0.1.0</version>
+	<version>0.1.0.RELEASE</version>
 	<name>spring-boot-istio</name>
 	<description>Spring Boot Integration with Istio</description>
 	<url>https://github.com/piomin/spring-boot-istio</url>
