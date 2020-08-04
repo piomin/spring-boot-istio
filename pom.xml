@@ -6,8 +6,8 @@
 
 	<groupId>com.github.piomin</groupId>
 	<artifactId>istio-spring-boot-starter</artifactId>
-	<version>0.1-SNAPSHOT</version>
-	<name>spring-boot-istio</name>
+	<version>0.1.1.RELEASE</version>
+	<name>istio-spring-boot-starter</name>
 	<description>Spring Boot Integration with Istio</description>
 	<url>https://github.com/piomin/spring-boot-istio</url>
 
@@ -87,20 +87,6 @@
 					<release>11</release>
 				</configuration>
 			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-gpg-plugin</artifactId>
-				<version>1.6</version>
-				<executions>
-					<execution>
-						<id>sign-artifacts</id>
-						<phase>verify</phase>
-						<goals>
-							<goal>sign</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
 		</plugins>
 	</build>
 
@@ -109,6 +95,20 @@
 			<id>release</id>
 			<build>
 				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<version>1.6</version>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-source-plugin</artifactId>
