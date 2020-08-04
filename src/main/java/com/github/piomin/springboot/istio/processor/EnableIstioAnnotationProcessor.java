@@ -77,7 +77,7 @@ public class EnableIstioAnnotationProcessor {
 					.findAny();
 			resource.edit()
 					.editSpec()
-					.addAllToSubsets(subset.isEmpty() ? List.of(istioService.buildSubset(enableIstioAnnotation)) :
+					.addAllToSubsets(!subset.isPresent() ? Collections.singletonList(istioService.buildSubset(enableIstioAnnotation)) :
 							Collections.emptyList())
 					.editOrNewTrafficPolicyLike(istioService.buildCircuitBreaker(enableIstioAnnotation))
 					.endTrafficPolicy()
