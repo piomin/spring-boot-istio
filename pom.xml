@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.github.piomin</groupId>
-	<artifactId>spring-boot-istio</artifactId>
+	<artifactId>istio-spring-boot-starter</artifactId>
 	<version>0.1-SNAPSHOT</version>
 	<name>spring-boot-istio</name>
 	<description>Spring Boot Integration with Istio</description>
@@ -32,6 +32,7 @@
 		<istio-client.version>1.5.4-Alpha1</istio-client.version>
 		<kubernetes-client.version>4.10.1</kubernetes-client.version>
 		<spring.version>5.2.6.RELEASE</spring.version>
+		<spring.boot.version>2.1.4.RELEASE</spring.boot.version>
 	</properties>
 
 	<scm>
@@ -66,6 +67,13 @@
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context-support</artifactId>
 			<version>${spring.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-autoconfigure</artifactId>
+			<version>${spring.boot.version}</version>
+			<scope>provided</scope>
 		</dependency>
 	</dependencies>
 
@@ -82,7 +90,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-gpg-plugin</artifactId>
-				<version>1.5</version>
+				<version>1.6</version>
 				<executions>
 					<execution>
 						<id>sign-artifacts</id>
@@ -104,7 +112,7 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-source-plugin</artifactId>
-						<version>3.0.1</version>
+						<version>3.2.1</version>
 						<executions>
 							<execution>
 								<id>attach-sources</id>
@@ -117,7 +125,7 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-javadoc-plugin</artifactId>
-						<version>3.0.0</version>
+						<version>3.2.0</version>
 						<executions>
 							<execution>
 								<id>attach-javadocs</id>

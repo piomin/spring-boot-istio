@@ -7,6 +7,7 @@ import me.snowdrop.istio.client.DefaultIstioClient;
 import me.snowdrop.istio.client.IstioClient;
 
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,6 +15,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class SpringBootIstioAutoConfiguration {
 
+    @ConditionalOnMissingBean
     @Bean
     IstioClient istioClient() {
         return new DefaultIstioClient();
