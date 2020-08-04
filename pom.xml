@@ -33,6 +33,9 @@
 		<kubernetes-client.version>4.10.3</kubernetes-client.version>
 		<spring.version>5.2.6.RELEASE</spring.version>
 		<spring.boot.version>2.1.4.RELEASE</spring.boot.version>
+		<sonar.projectKey>piomin_spring-boot-istio</sonar.projectKey>
+		<sonar.organization>piomin</sonar.organization>
+		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
 	</properties>
 
 	<scm>
