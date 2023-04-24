@@ -71,10 +71,11 @@ public class IstioService {
     }
 
     public HTTPRetry buildRetry(EnableIstio enableIstio) {
-        long ratioTimeout = Math.round(enableIstio.timeout() / enableIstio.numberOfRetries());
         if (enableIstio.numberOfRetries() == 0)
             return null;
-        else return new HTTPRetryBuilder()
+        long ratioTimeout = Math.round(enableIstio.timeout() / enableIstio.numberOfRetries());
+
+        return new HTTPRetryBuilder()
                 .withAttempts(enableIstio.numberOfRetries())
                 .withRetryOn(RETRY_CODES)
                 .withPerTryTimeout(enableIstio.timeout() != 0 ? new Duration(0, ratioTimeout) : null)
