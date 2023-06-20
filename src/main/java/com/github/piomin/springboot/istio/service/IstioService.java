@@ -1,24 +1,13 @@
 package com.github.piomin.springboot.istio.service;
 
-import java.util.Optional;
-
 import com.github.piomin.springboot.istio.annotation.EnableIstio;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import me.snowdrop.istio.api.Duration;
-import me.snowdrop.istio.api.UInt32ValueBuilder;
-import me.snowdrop.istio.api.networking.v1beta1.ConnectionPoolSettingsBuilder;
-import me.snowdrop.istio.api.networking.v1beta1.Destination;
-import me.snowdrop.istio.api.networking.v1beta1.DestinationBuilder;
-import me.snowdrop.istio.api.networking.v1beta1.HTTPRetry;
-import me.snowdrop.istio.api.networking.v1beta1.HTTPRetryBuilder;
-import me.snowdrop.istio.api.networking.v1beta1.OutlierDetectionBuilder;
-import me.snowdrop.istio.api.networking.v1beta1.Subset;
-import me.snowdrop.istio.api.networking.v1beta1.SubsetBuilder;
-import me.snowdrop.istio.api.networking.v1beta1.TrafficPolicy;
-import me.snowdrop.istio.api.networking.v1beta1.TrafficPolicyBuilder;
-
+import me.snowdrop.istio.api.networking.v1beta1.*;
 import org.springframework.beans.factory.annotation.Value;
+
+import java.util.Optional;
 
 public class IstioService {
 
@@ -51,9 +40,7 @@ public class IstioService {
         if (enableIstio.circuitBreakerErrors() == 0)
             return builder.build();
         else return builder.withOutlierDetection(new OutlierDetectionBuilder()
-                        .withConsecutive5xxErrors(new UInt32ValueBuilder()
-                                .withValue(enableIstio.circuitBreakerErrors())
-                                .build())
+                        .withConsecutive5xxErrors(enableIstio.circuitBreakerErrors())
                         .withBaseEjectionTime(new Duration(0, CIRCUIT_OPEN_TIME))
                         .withMaxEjectionPercent(MAX_DISABLED_HOSTS_PERCENTAGE)
                         .build())
