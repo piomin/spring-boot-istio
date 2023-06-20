@@ -19,7 +19,7 @@ orbs:
   maven: circleci/maven@1.4.0
 
 workflows:
-  build:
+  maven_test:
     jobs:
       - maven/test:
           executor: jdk
