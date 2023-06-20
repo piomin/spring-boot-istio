@@ -6,16 +6,14 @@ import io.fabric8.kubernetes.api.model.ObjectMeta;
 import me.snowdrop.istio.api.Duration;
 import me.snowdrop.istio.api.networking.v1beta1.Destination;
 import me.snowdrop.istio.api.networking.v1beta1.HTTPRetry;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.lang.annotation.Annotation;
 
-@RunWith(SpringRunner.class)
+import static org.junit.jupiter.api.Assertions.*;
+
 @SpringBootTest(classes = IstioService.class,
                 properties = "spring.application.name=test1")
 public class IstioServiceTests {
@@ -26,33 +24,33 @@ public class IstioServiceTests {
     @Test
     public void buildDestinationRuleMetadata() {
         ObjectMeta meta = istioService.buildDestinationRuleMetadata();
-        Assert.assertNotNull(meta);
-        Assert.assertEquals("test1-destination", meta.getName());
+        assertNotNull(meta);
+        assertEquals("test1-destination", meta.getName());
     }
 
     @Test
     public void buildRetryNull() {
         EnableIstio enableIstio = createEnableIstio(0, 0, "");
         HTTPRetry retry = istioService.buildRetry(enableIstio);
-        Assert.assertNull(retry);
+        assertNull(retry);
     }
 
     @Test
     public void buildRetry() {
         EnableIstio enableIstio = createEnableIstio(10, 3, "");
         HTTPRetry retry = istioService.buildRetry(enableIstio);
-        Assert.assertNotNull(retry);
-        Assert.assertEquals(Integer.valueOf(3), retry.getAttempts());
-        Assert.assertEquals(new Duration(0, 3L), retry.getPerTryTimeout());
+        assertNotNull(retry);
+        assertEquals(Integer.valueOf(3), retry.getAttempts());
+        assertEquals(new Duration(0, 3L), retry.getPerTryTimeout());
     }
 
     @Test
     public void buildDestination() {
         EnableIstio enableIstio = createEnableIstio(0, 0, "v1");
         Destination dest = istioService.buildDestination(enableIstio);
-        Assert.assertNotNull(dest);
-        Assert.assertEquals("v1", dest.getSubset());
-        Assert.assertEquals("test1", dest.getHost());
+        assertNotNull(dest);
+        assertEquals("v1", dest.getSubset());
+        assertEquals("test1", dest.getHost());
     }
 
     private EnableIstio createEnableIstio(int timeout, int numberOfRetries, String version) {

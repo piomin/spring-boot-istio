@@ -5,17 +5,14 @@ import com.github.piomin.springboot.istio.processor.EnableIstioAnnotationProcess
 import com.github.piomin.springboot.istio.service.IstioService;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import me.snowdrop.istio.client.DefaultIstioClient;
-import me.snowdrop.istio.client.IstioClient;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.lang.annotation.Annotation;
 
-@RunWith(SpringRunner.class)
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 @SpringBootTest(classes = {IstioService.class, DefaultIstioClient.class, EnableIstioAnnotationProcessor.class},
         properties = "spring.application.name=test1")
 public class EnableIstioAnnotationProcessorTests {
@@ -23,10 +20,10 @@ public class EnableIstioAnnotationProcessorTests {
     @Autowired
     EnableIstioAnnotationProcessor processor;
 
-    @Test(expected = KubernetesClientException.class)
+    @Test
     public void test() {
         EnableIstio enableIstio = createEnableIstio(0, 3, "v1");
-        processor.process(enableIstio);
+        assertThrows(KubernetesClientException.class, () -> processor.process(enableIstio));
     }
 
     private EnableIstio createEnableIstio(int timeout, int numberOfRetries, String version) {
