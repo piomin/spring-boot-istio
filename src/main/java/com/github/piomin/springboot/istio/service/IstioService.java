@@ -30,10 +30,7 @@ public class IstioService {
     private Optional<String> applicationName;
 
     public String getApplicationName() {
-        if (applicationName.isPresent())
-            return applicationName.get();
-        else
-            return "default";
+        return applicationName.orElse("default");
     }
 
     public String getDestinationRuleName() {
