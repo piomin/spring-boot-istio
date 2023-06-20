@@ -23,5 +23,5 @@ workflows:
     jobs:
       - maven/test:
           executor: jdk
-      - analyze:
+      - build:
           context: SonarCloud
