@@ -3,7 +3,6 @@ package com.github.piomin.springboot.istio;
 import com.github.piomin.springboot.istio.annotation.EnableIstio;
 import com.github.piomin.springboot.istio.processor.EnableIstioAnnotationProcessor;
 import com.github.piomin.springboot.istio.service.IstioService;
-import io.fabric8.kubernetes.client.KubernetesClientException;
 import me.snowdrop.istio.client.DefaultIstioClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
