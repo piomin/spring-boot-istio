@@ -1,20 +1,16 @@
 package com.github.piomin.springboot.istio.processor;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import com.github.piomin.springboot.istio.annotation.EnableIstio;
 import com.github.piomin.springboot.istio.service.IstioService;
-import me.snowdrop.istio.api.Duration;
-import me.snowdrop.istio.api.networking.v1beta1.DestinationRule;
-import me.snowdrop.istio.api.networking.v1beta1.DestinationRuleBuilder;
-import me.snowdrop.istio.api.networking.v1beta1.Subset;
-import me.snowdrop.istio.api.networking.v1beta1.VirtualService;
-import me.snowdrop.istio.api.networking.v1beta1.VirtualServiceBuilder;
-import me.snowdrop.istio.client.IstioClient;
+import io.fabric8.istio.api.networking.v1beta1.*;
+import io.fabric8.istio.client.IstioClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.apache.commons.lang3.time.DurationFormatUtils.formatDuration;
 
 public class EnableIstioAnnotationProcessor {
 
@@ -31,7 +27,8 @@ public class EnableIstioAnnotationProcessor {
         LOGGER.info("Istio feature enabled: {}", enableIstioAnnotation);
 
         Object resource = istioClient
-                .v1beta1DestinationRule()
+                .v1beta1()
+                .destinationRules()
                 .withName(istioService.getDestinationRuleName());
         if (resource == null) {
             createNewDestinationRule(enableIstioAnnotation);
@@ -40,7 +37,8 @@ public class EnableIstioAnnotationProcessor {
         }
 
         Object resource2 = istioClient
-                .v1beta1VirtualService()
+                .v1beta1()
+                .virtualServices()
                 .withName(istioService.getVirtualServiceName());
         if (resource2 == null) {
             createNewVirtualService(enableIstioAnnotation);
@@ -53,12 +51,12 @@ public class EnableIstioAnnotationProcessor {
         DestinationRule dr = new DestinationRuleBuilder()
                 .withMetadata(istioService.buildDestinationRuleMetadata())
                 .withNewSpec()
-                .withNewHost(istioService.getApplicationName())
+                .withHost(istioService.getApplicationName())
                 .withSubsets(istioService.buildSubset(enableIstioAnnotation))
                 .withTrafficPolicy(istioService.buildCircuitBreaker(enableIstioAnnotation))
                 .endSpec()
                 .build();
-        istioClient.v1beta1DestinationRule().create(dr);
+        istioClient.v1beta1().destinationRules().create(dr);
         LOGGER.info("New DestinationRule created: {}", dr);
     }
 
@@ -71,7 +69,7 @@ public class EnableIstioAnnotationProcessor {
                     .findAny();
             rule.getSpec().getSubsets().addAll(List.of(istioService.buildSubset(enableIstioAnnotation)));
             rule.getSpec().setTrafficPolicy(istioService.buildCircuitBreaker(enableIstioAnnotation));
-            istioClient.v1beta1DestinationRule().createOrReplace(rule);
+            istioClient.v1beta1().destinationRules().createOrReplace(rule);
 //            resource.edit()
 //                    .editSpec()
 //                    .addAllToSubsets(subset.isEmpty() ? Collections.singletonList(istioService.buildSubset(enableIstioAnnotation)) :
@@ -89,15 +87,14 @@ public class EnableIstioAnnotationProcessor {
                 .withNewSpec()
                 .addToHosts(istioService.getApplicationName())
                 .addNewHttp()
-                .withTimeout(enableIstioAnnotation.timeout() == 0 ? null : new Duration(0, (long) enableIstioAnnotation
-                        .timeout()))
+                .withTimeout(enableIstioAnnotation.timeout() == 0 ? null : formatDuration(enableIstioAnnotation.timeout(), "s's'"))
                 .withRetries(istioService.buildRetry(enableIstioAnnotation))
                 .addNewRoute().withNewDestinationLike(istioService.buildDestination(enableIstioAnnotation))
                 .endDestination().endRoute()
                 .endHttp()
                 .endSpec()
                 .build();
-        istioClient.v1beta1VirtualService().create(vs);
+        istioClient.v1beta1().virtualServices().create(vs);
         LOGGER.info("New VirtualService created: {}", vs);
     }
 
@@ -106,11 +103,11 @@ public class EnableIstioAnnotationProcessor {
         if (!enableIstioAnnotation.version().isEmpty()) {
             VirtualService vs = (VirtualService) resource;
             vs.getSpec().getHttp().get(0).setTimeout(enableIstioAnnotation
-                    .timeout() == 0 ? null : new Duration(0, (long) enableIstioAnnotation.timeout()));
+                    .timeout() == 0 ? null : formatDuration(enableIstioAnnotation.timeout(), "s's'"));
             vs.getSpec().getHttp().get(0).setRetries(istioService.buildRetry(enableIstioAnnotation));
             vs.getSpec().getHttp().get(0).getRoute().get(0).setWeight(enableIstioAnnotation.weight() == 0 ? null : enableIstioAnnotation.weight());
             vs.getSpec().getHttp().get(0).getRoute().get(0).setDestination(istioService.buildDestination(enableIstioAnnotation));
-            istioClient.v1beta1VirtualService().createOrReplace(vs);
+            istioClient.v1beta1().virtualServices().createOrReplace(vs);
 //            istioClient.v1beta1VirtualService().withName(istioService.getVirtualServiceName())
 //                    .edit()
 //                    .editSpec()
