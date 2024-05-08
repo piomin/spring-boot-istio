@@ -1,18 +1,19 @@
 package com.github.piomin.springboot.istio.service;
 
 import com.github.piomin.springboot.istio.annotation.EnableIstio;
+import io.fabric8.istio.api.networking.v1beta1.*;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-import me.snowdrop.istio.api.Duration;
-import me.snowdrop.istio.api.networking.v1beta1.*;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.util.Optional;
 
+import static org.apache.commons.lang3.time.DurationFormatUtils.formatDuration;
+
 public class IstioService {
 
     private static final String RETRY_CODES = "5xx";
-    private static final long CIRCUIT_OPEN_TIME = 30000L;
+    private static final String CIRCUIT_OPEN_TIME = "30s";
     private static final int MAX_DISABLED_HOSTS_PERCENTAGE = 100;
 
     @Value("${spring.application.name}")
@@ -41,7 +42,7 @@ public class IstioService {
             return builder.build();
         else return builder.withOutlierDetection(new OutlierDetectionBuilder()
                         .withConsecutive5xxErrors(enableIstio.circuitBreakerErrors())
-                        .withBaseEjectionTime(new Duration(0, CIRCUIT_OPEN_TIME))
+                        .withBaseEjectionTime(CIRCUIT_OPEN_TIME)
                         .withMaxEjectionPercent(MAX_DISABLED_HOSTS_PERCENTAGE)
                         .build())
                 .build();
@@ -57,12 +58,12 @@ public class IstioService {
     public HTTPRetry buildRetry(EnableIstio enableIstio) {
         if (enableIstio.numberOfRetries() == 0)
             return null;
-        long ratioTimeout = Math.round(enableIstio.timeout() / enableIstio.numberOfRetries());
-
+        long ratioTimeout = Math.round((float) enableIstio.timeout() / enableIstio.numberOfRetries());
         return new HTTPRetryBuilder()
                 .withAttempts(enableIstio.numberOfRetries())
                 .withRetryOn(RETRY_CODES)
-                .withPerTryTimeout(enableIstio.timeout() != 0 ? new Duration(0, ratioTimeout) : null)
+                .withPerTryTimeout(enableIstio.timeout() != 0 ?
+                        formatDuration(ratioTimeout * 1000, "s's'") : null)
                 .build();
     }
 

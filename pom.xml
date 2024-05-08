@@ -6,7 +6,7 @@
 
     <groupId>com.github.piomin</groupId>
     <artifactId>istio-spring-boot-starter</artifactId>
-    <version>0.2.0</version>
+    <version>1.0.0</version>
     <name>istio-spring-boot-starter</name>
     <description>Spring Boot Integration with Istio</description>
     <url>https://github.com/piomin/spring-boot-istio</url>
@@ -30,7 +30,7 @@
     <properties>
         <java.version>11</java.version>
         <istio-client.version>1.7.7.1</istio-client.version>
-        <kubernetes-client.version>5.1.2</kubernetes-client.version>
+        <kubernetes-client.version>6.12.1</kubernetes-client.version>
         <spring.version>6.1.6</spring.version>
         <spring.boot.version>3.2.5</spring.boot.version>
         <sonar.projectKey>piomin_spring-boot-istio</sonar.projectKey>
@@ -57,14 +57,19 @@
 
     <dependencies>
         <dependency>
-            <groupId>me.snowdrop</groupId>
+            <groupId>io.fabric8</groupId>
             <artifactId>istio-client</artifactId>
-            <version>${istio-client.version}</version>
+            <version>${kubernetes-client.version}</version>
         </dependency>
         <dependency>
             <groupId>io.fabric8</groupId>
             <artifactId>kubernetes-client</artifactId>
             <version>${kubernetes-client.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.14.0</version>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>

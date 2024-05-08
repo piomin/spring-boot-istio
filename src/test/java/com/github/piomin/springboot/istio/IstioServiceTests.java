@@ -2,10 +2,9 @@ package com.github.piomin.springboot.istio;
 
 import com.github.piomin.springboot.istio.annotation.EnableIstio;
 import com.github.piomin.springboot.istio.service.IstioService;
+import io.fabric8.istio.api.networking.v1beta1.Destination;
+import io.fabric8.istio.api.networking.v1beta1.HTTPRetry;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
-import me.snowdrop.istio.api.Duration;
-import me.snowdrop.istio.api.networking.v1beta1.Destination;
-import me.snowdrop.istio.api.networking.v1beta1.HTTPRetry;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -41,7 +40,7 @@ public class IstioServiceTests {
         HTTPRetry retry = istioService.buildRetry(enableIstio);
         assertNotNull(retry);
         assertEquals(Integer.valueOf(3), retry.getAttempts());
-        assertEquals(new Duration(0, 3L), retry.getPerTryTimeout());
+        assertEquals("3s", retry.getPerTryTimeout());
     }
 
     @Test

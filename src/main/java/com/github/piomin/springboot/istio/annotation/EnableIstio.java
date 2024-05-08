@@ -10,6 +10,10 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface EnableIstio {
+    /**
+     * Timeout in seconds
+     * @return timeout value
+     */
     int timeout() default 0;
 
     String version() default "";
