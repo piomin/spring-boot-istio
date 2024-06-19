@@ -31,7 +31,7 @@
         <java.version>11</java.version>
         <istio-client.version>1.7.7.1</istio-client.version>
         <kubernetes-client.version>6.13.0</kubernetes-client.version>
-        <spring.version>6.1.9</spring.version>
+        <spring.version>6.1.10</spring.version>
         <spring.boot.version>3.3.0</spring.boot.version>
         <sonar.projectKey>piomin_spring-boot-istio</sonar.projectKey>
         <sonar.organization>piomin</sonar.organization>
