@@ -32,7 +32,7 @@
         <istio-client.version>1.7.7.1</istio-client.version>
         <kubernetes-client.version>6.13.4</kubernetes-client.version>
         <spring.version>6.2.0</spring.version>
-        <spring.boot.version>3.3.5</spring.boot.version>
+        <spring.boot.version>3.3.6</spring.boot.version>
         <sonar.projectKey>piomin_spring-boot-istio</sonar.projectKey>
         <sonar.organization>piomin</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
