@@ -12,14 +12,25 @@ This library is dedicated for Spring Boot application. Once it is included and e
 
 ## Getting Started
 
-The library is published on Maven Central. Current version is `0.1.1.RELEASE`
-```
+### Prerequisites
+
+- Java 17 or higher
+- Kubernetes cluster with Istio installed
+- kubectl configured to access your cluster
+
+### Installation
+
+Add the dependency to your Maven `pom.xml`:
+
+```xml
 <dependency>
   <groupId>com.github.piomin</groupId>
   <artifactId>istio-spring-boot-starter</artifactId>
-  <version>0.2.0</version>
+  <version>1.1.0</version>
 </dependency>
 ```
+
+## Usage
 
 The library provides auto-configured support for creating Istio resources on Kubernetes basing on annotation `@EnableIstio`.
 ```
@@ -34,7 +45,26 @@ public class CallmeApplication {
 }
 ```
 
-## Usage
+The `@EnableIstio` annotation provides the following configuration options:
+
+| Parameter        | Type   | Default    | Description |
+|------------------|--------|------------|-------------|
+| `version`        | String | -          | (Required) Version label for the service |
+| `retries`        | int    | 0          | Number of retries for failed requests |
+| `timeout`        | int    | 0          | Request timeout in seconds (0 means no timeout) |
+| `circuitBreaker` | String | -          | Circuit breaker configuration in format "maxConnections,http2MaxRequests" |
+| `namespace`      | String | "default"  | Kubernetes namespace for the resources |
+| `host`           | String | -          | Override the default hostname for the service |
+| `ports`          | int[]  | [8080]     | Array of ports to expose in the VirtualService |
+| `destinationRuleName` | String | auto-generated | Custom name for the DestinationRule resource |
+| `virtualServiceName` | String | auto-generated | Custom name for the VirtualService resource |
+
+### How It Works
+
+The library automatically creates the following Istio resources during application startup:
+
+`DestinationRule`: Defines policies for traffic routing, including load balancing and connection pool settings.\
+`VirtualService`: Configures request routing, retries, timeouts, and fault injection.
 
 Here's the architecture of presented solution. Spring Boot Istio Library is included to the target application. It uses Java Istio Client to communication with istiod. During application startup the library is communicating with Istio API in order to create `DestinationRule` and `VirtualService` objects.
 
