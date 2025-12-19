@@ -13,7 +13,7 @@ jobs:
       - checkout
       - run:
           name: Analyze on SonarCloud
-          command: mvn verify sonar:sonar
+          command: mvn test sonar:sonar
   release:
     docker:
       - image: maven:3.9.12-eclipse-temurin-21
@@ -131,6 +131,10 @@ workflows:
           command: test
       - build:
           context: SonarCloud
+      - integration-tests:
+          requires:
+            - build
+            - maven/test
   release:
     when: << pipeline.parameters.run_release >>
     jobs:
@@ -140,7 +144,3 @@ workflows:
           context: Central
           requires:
             - analyze
-      - integration-tests:
-          requires:
-            - build
-            - maven/test
