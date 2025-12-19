@@ -44,7 +44,7 @@ jobs:
           name: Run Tests
           command: |
             istioctl version
-            mvn verify
+            mvn failsafe:integration-test
       - run:
           name: Delete Kind Cluster
           command: |
