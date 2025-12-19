@@ -7,6 +7,8 @@ import com.github.piomin.springboot.istio.annotation.EnableIstio;
 import com.github.piomin.springboot.istio.service.IstioService;
 import io.fabric8.istio.api.networking.v1beta1.*;
 import io.fabric8.istio.client.IstioClient;
+import io.fabric8.kubernetes.client.dsl.Resource;
+import io.fabric8.kubernetes.client.utils.Serialization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,28 +28,30 @@ public class EnableIstioAnnotationProcessor {
     public void process(EnableIstio enableIstioAnnotation) {
         LOGGER.info("Istio feature enabled: {}", enableIstioAnnotation);
 
-        Object resource = istioClient
+        Resource<DestinationRule> dr = istioClient
                 .v1beta1()
                 .destinationRules()
                 .withName(istioService.getDestinationRuleName());
-        if (resource == null) {
+        if (dr.item() == null) {
             createNewDestinationRule(enableIstioAnnotation);
         } else {
-            editDestinationRule(enableIstioAnnotation, resource);
+            editDestinationRule(enableIstioAnnotation, dr);
         }
 
-        Object resource2 = istioClient
+        Resource<VirtualService> vs = istioClient
                 .v1beta1()
                 .virtualServices()
                 .withName(istioService.getVirtualServiceName());
-        if (resource2 == null) {
+        if (vs.item() == null) {
             createNewVirtualService(enableIstioAnnotation);
         } else {
-            editVirtualService(enableIstioAnnotation, resource2);
+            editVirtualService(enableIstioAnnotation, vs);
         }
     }
 
     private void createNewDestinationRule(EnableIstio enableIstioAnnotation) {
+        if (enableIstioAnnotation.version().isEmpty())
+            return;
         DestinationRule dr = new DestinationRuleBuilder()
                 .withMetadata(istioService.buildDestinationRuleMetadata())
                 .withNewSpec()
@@ -57,11 +61,11 @@ public class EnableIstioAnnotationProcessor {
                 .endSpec()
                 .build();
         istioClient.v1beta1().destinationRules().create(dr);
-        LOGGER.info("New DestinationRule created: {}", dr);
+        LOGGER.info("New DestinationRule created: \n{}", Serialization.asYaml(dr));
     }
 
-    private void editDestinationRule(EnableIstio enableIstioAnnotation, Object resource) {
-        LOGGER.info("Found DestinationRule: {}", resource);
+    private void editDestinationRule(EnableIstio enableIstioAnnotation, Resource<DestinationRule> resource) {
+        LOGGER.info("Found DestinationRule: {}", resource.item());
         if (!enableIstioAnnotation.version().isEmpty()) {
             DestinationRule rule = (DestinationRule) resource;
             Optional<Subset> subset = rule.getSpec().getSubsets().stream()
@@ -94,12 +98,12 @@ public class EnableIstioAnnotationProcessor {
                 .endHttp()
                 .endSpec()
                 .build();
-        istioClient.v1beta1().virtualServices().create(vs);
-        LOGGER.info("New VirtualService created: {}", vs);
+        vs = istioClient.v1beta1().virtualServices().create(vs);
+        LOGGER.info("New VirtualService created: \n{}", Serialization.asYaml(vs));
     }
 
-    private void editVirtualService(EnableIstio enableIstioAnnotation, Object resource) {
-        LOGGER.info("Found VirtualService: {}", resource);
+    private void editVirtualService(EnableIstio enableIstioAnnotation, Resource<VirtualService> resource) {
+        LOGGER.info("Found VirtualService: {}", resource.item());
         if (!enableIstioAnnotation.version().isEmpty()) {
             VirtualService vs = (VirtualService) resource;
             vs.getSpec().getHttp().get(0).setTimeout(enableIstioAnnotation
