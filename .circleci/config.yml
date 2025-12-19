@@ -26,7 +26,6 @@ jobs:
             cd istio-*
             chmod +x bin/istioctl
             sudo mv bin/istioctl /usr/local/bin/istioctl
-            istioctl version
       - run:
           name: Install Kind
           command: |
@@ -44,6 +43,7 @@ jobs:
       - run:
           name: Run Tests
           command: |
+            istioctl version
             mvn verify
       - run:
           name: Delete Kind Cluster
@@ -71,4 +71,7 @@ workflows:
           executor: jdk
       - build:
           context: SonarCloud
-      - integration-tests
+      - integration-tests:
+          requires:
+            - build
+            - maven/test
