@@ -9,13 +9,46 @@ jobs:
       - run:
           name: Analyze on SonarCloud
           command: mvn verify sonar:sonar
-  integration:
+  integration-tests:
     executor: vm
     steps:
       - checkout
       - run:
-          name: Maven Integration Tests
-          command: mvn verify
+          name: Install Kubectl
+          command: |
+            curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+            chmod +x kubectl
+            sudo mv ./kubectl /usr/local/bin/kubectl
+      - run:
+          name: Install Istioctl
+          command: |
+            curl -L https://istio.io/downloadIstio | sh -
+            cd istio-*
+            chmod +x bin/istioctl
+            sudo mv bin/istioctl /usr/local/bin/istioctl
+            istioctl version
+      - run:
+          name: Install Kind
+          command: |
+            [ $(uname -m) = x86_64 ] && curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64
+            chmod +x ./kind
+            sudo mv ./kind /usr/local/bin/kind
+      - run:
+          name: Create Kind Cluster
+          command: |
+            kind create cluster --name c1
+      - run:
+          name: Install Istio
+          command: |
+            istioctl install --set profile=default -y
+      - run:
+          name: Run Tests
+          command: |
+            mvn verify
+      - run:
+          name: Delete Kind Cluster
+          command: |
+            kind delete cluster --name c1
 
 executors:
   jdk:
@@ -38,3 +71,4 @@ workflows:
           executor: jdk
       - build:
           context: SonarCloud
+      - integration-tests
