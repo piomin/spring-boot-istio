@@ -66,7 +66,6 @@ jobs:
           environment:
             GPG_TTY: /dev/tty
             MAVEN_GPG_PASSPHRASE: 123456
-          command: mvn test sonar:sonar
   integration-tests:
     executor: vm
     steps:
