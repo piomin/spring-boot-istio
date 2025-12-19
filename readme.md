@@ -1,10 +1,12 @@
-# Spring Boot Library for integration with Istio on Kubernetes
+# Spring Boot Library for integration with Istio on Kubernetes [![Twitter](https://img.shields.io/twitter/follow/piotr_minkowski.svg?style=social&logo=twitter&label=Follow%20Me)](https://twitter.com/piotr_minkowski)
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.piomin/istio-spring-boot-starter/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.piomin/istio-spring-boot-starter)
-[![CircleCI](https://circleci.com/gh/piomin/spring-boot-logging.svg?style=shield)](https://circleci.com/gh/piomin/spring-boot-istio)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=piomin_spring-boot-istio&metric=alert_status)](https://sonarcloud.io/dashboard?id=piomin_spring-boot-istio)
-[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=piomin_spring-boot-istio&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=piomin_spring-boot-istio)
-[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=piomin_spring-boot-istio&metric=reliability_rating)](https://sonarcloud.io/dashboard?id=piomin_spring-boot-istio)
+![Maven Central Version](https://img.shields.io/maven-central/v/com.github.piomin/istio-spring-boot-starter)
+[![CircleCI](https://circleci.com/gh/piomin/spring-boot-istio.svg?style=svg)](https://circleci.com/gh/piomin/spring-boot-istio)
+
+[![SonarCloud](https://sonarcloud.io/images/project_badges/sonarcloud-black.svg)](https://sonarcloud.io/dashboard?id=piomin_spring-boot-istio)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=piomin_spring-boot-istio&metric=bugs)](https://sonarcloud.io/dashboard?id=piomin_spring-boot-istio)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=piomin_spring-boot-istio&metric=coverage)](https://sonarcloud.io/dashboard?id=piomin_spring-boot-istio)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=piomin_spring-boot-istio&metric=ncloc)](https://sonarcloud.io/dashboard?id=piomin_spring-boot-istio)
 
 ## Main Purpose
 
