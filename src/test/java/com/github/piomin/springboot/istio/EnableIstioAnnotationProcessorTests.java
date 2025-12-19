@@ -4,6 +4,7 @@ import com.github.piomin.springboot.istio.annotation.EnableIstio;
 import com.github.piomin.springboot.istio.processor.EnableIstioAnnotationProcessor;
 import com.github.piomin.springboot.istio.service.IstioService;
 import io.fabric8.istio.client.DefaultIstioClient;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,9 +23,7 @@ public class EnableIstioAnnotationProcessorTests {
     @Test
     public void test() {
         EnableIstio enableIstio = createEnableIstio(0, 3, "v1");
-        // TODO - reconsider
-//        assertThrows(KubernetesClientException.class, () -> processor.process(enableIstio));
-        assertThrows(ClassCastException.class, () -> processor.process(enableIstio));
+        assertThrows(KubernetesClientException.class, () -> processor.process(enableIstio));
     }
 
     private EnableIstio createEnableIstio(int timeout, int numberOfRetries, String version) {
