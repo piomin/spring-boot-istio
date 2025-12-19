@@ -8,7 +8,7 @@ jobs:
       - checkout
       - run:
           name: Analyze on SonarCloud
-          command: mvn verify sonar:sonar
+          command: mvn test sonar:sonar
   integration-tests:
     executor: vm
     steps:
@@ -69,6 +69,7 @@ workflows:
     jobs:
       - maven/test:
           executor: jdk
+          command: test
       - build:
           context: SonarCloud
       - integration-tests:
