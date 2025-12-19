@@ -49,17 +49,13 @@ public class CallmeApplication {
 
 The `@EnableIstio` annotation provides the following configuration options:
 
-| Parameter        | Type   | Default    | Description |
-|------------------|--------|------------|-------------|
-| `version`        | String | -          | (Required) Version label for the service |
-| `retries`        | int    | 0          | Number of retries for failed requests |
-| `timeout`        | int    | 0          | Request timeout in seconds (0 means no timeout) |
-| `circuitBreaker` | String | -          | Circuit breaker configuration in format "maxConnections,http2MaxRequests" |
-| `namespace`      | String | "default"  | Kubernetes namespace for the resources |
-| `host`           | String | -          | Override the default hostname for the service |
-| `ports`          | int[]  | [8080]     | Array of ports to expose in the VirtualService |
-| `destinationRuleName` | String | auto-generated | Custom name for the DestinationRule resource |
-| `virtualServiceName` | String | auto-generated | Custom name for the VirtualService resource |
+| Parameter              | Type   | Default | Description                                         |
+|------------------------|--------|---------|-----------------------------------------------------|
+| `version`              | String | -       | (Required) Version label for the service            |
+| `numberOfRetries`      | int    | 0       | Number of retries for failed requests               |
+| `timeout`              | int    | 0       | Request timeout in seconds (0 means no timeout)     |
+| `circuitBreakerErrors` | String | -       | Number of errors in row to trip the circuit breaker |
+| `weight`               | String | 0       | A weight ot path in load balancing                  |
 
 ### How It Works
 
