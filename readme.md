@@ -1,10 +1,12 @@
-# Spring Boot Library for integration with Istio on Kubernetes
+# Spring Boot Library for integration with Istio on Kubernetes [![Twitter](https://img.shields.io/twitter/follow/piotr_minkowski.svg?style=social&logo=twitter&label=Follow%20Me)](https://twitter.com/piotr_minkowski)
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.piomin/istio-spring-boot-starter/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.piomin/istio-spring-boot-starter)
-[![CircleCI](https://circleci.com/gh/piomin/spring-boot-logging.svg?style=shield)](https://circleci.com/gh/piomin/spring-boot-istio)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=piomin_spring-boot-istio&metric=alert_status)](https://sonarcloud.io/dashboard?id=piomin_spring-boot-istio)
-[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=piomin_spring-boot-istio&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=piomin_spring-boot-istio)
-[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=piomin_spring-boot-istio&metric=reliability_rating)](https://sonarcloud.io/dashboard?id=piomin_spring-boot-istio)
+![Maven Central Version](https://img.shields.io/maven-central/v/com.github.piomin/istio-spring-boot-starter)
+[![CircleCI](https://circleci.com/gh/piomin/spring-boot-istio.svg?style=svg)](https://circleci.com/gh/piomin/spring-boot-istio)
+
+[![SonarCloud](https://sonarcloud.io/images/project_badges/sonarcloud-black.svg)](https://sonarcloud.io/dashboard?id=piomin_spring-boot-istio)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=piomin_spring-boot-istio&metric=bugs)](https://sonarcloud.io/dashboard?id=piomin_spring-boot-istio)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=piomin_spring-boot-istio&metric=coverage)](https://sonarcloud.io/dashboard?id=piomin_spring-boot-istio)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=piomin_spring-boot-istio&metric=ncloc)](https://sonarcloud.io/dashboard?id=piomin_spring-boot-istio)
 
 ## Main Purpose
 
@@ -12,14 +14,25 @@ This library is dedicated for Spring Boot application. Once it is included and e
 
 ## Getting Started
 
-The library is published on Maven Central. Current version is `0.1.1.RELEASE`
-```
+### Prerequisites
+
+- Java 17 or higher
+- Kubernetes cluster with Istio installed
+- kubectl configured to access your cluster
+
+### Installation
+
+Add the dependency to your Maven `pom.xml`:
+
+```xml
 <dependency>
   <groupId>com.github.piomin</groupId>
   <artifactId>istio-spring-boot-starter</artifactId>
-  <version>0.2.0</version>
+  <version>1.1.0</version>
 </dependency>
 ```
+
+## Usage
 
 The library provides auto-configured support for creating Istio resources on Kubernetes basing on annotation `@EnableIstio`.
 ```
@@ -34,7 +47,22 @@ public class CallmeApplication {
 }
 ```
 
-## Usage
+The `@EnableIstio` annotation provides the following configuration options:
+
+| Parameter              | Type   | Default | Description                                         |
+|------------------------|--------|---------|-----------------------------------------------------|
+| `version`              | String | -       | (Required) Version label for the service            |
+| `numberOfRetries`      | int    | 0       | Number of retries for failed requests               |
+| `timeout`              | int    | 0       | Request timeout in seconds (0 means no timeout)     |
+| `circuitBreakerErrors` | String | -       | Number of errors in row to trip the circuit breaker |
+| `weight`               | String | 0       | A weight ot path in load balancing                  |
+
+### How It Works
+
+The library automatically creates the following Istio resources during application startup:
+
+`DestinationRule`: Defines policies for traffic routing, including load balancing and connection pool settings.\
+`VirtualService`: Configures request routing, retries, timeouts, and fault injection.
 
 Here's the architecture of presented solution. Spring Boot Istio Library is included to the target application. It uses Java Istio Client to communication with istiod. During application startup the library is communicating with Istio API in order to create `DestinationRule` and `VirtualService` objects.
 
