@@ -14,9 +14,11 @@ import java.io.IOException;
 @SpringBootTest
 public class IstioServiceIT {
 
+    private final static String K8S_TEST_CONTEXT = "kind-c1";
+
     @BeforeAll
     static void setup() throws IOException, InterruptedException {
-        Config config = Config.autoConfigure("kind-c1");
+        Config config = Config.autoConfigure(K8S_TEST_CONTEXT);
         try (KubernetesClient client = new KubernetesClientBuilder().withConfig(config).build()) {
             System.setProperty(Config.KUBERNETES_MASTER_SYSTEM_PROPERTY, client.getConfiguration().getMasterUrl());
             System.setProperty(Config.KUBERNETES_CLIENT_CERTIFICATE_FILE_SYSTEM_PROPERTY,
@@ -34,7 +36,7 @@ public class IstioServiceIT {
 
     @Test
     void shouldStart() {
-        Config config = Config.autoConfigure("minikube");
+        Config config = Config.autoConfigure(K8S_TEST_CONTEXT);
         try (KubernetesClient client = new KubernetesClientBuilder().withConfig(config).build()) {
             VirtualService vs = client.resources(VirtualService.class)
                     .withName("sample-app-with-istio-route")
