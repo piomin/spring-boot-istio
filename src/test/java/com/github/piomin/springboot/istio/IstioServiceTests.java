@@ -1,9 +1,14 @@
 package com.github.piomin.springboot.istio;
 
 import com.github.piomin.springboot.istio.annotation.EnableIstio;
+import com.github.piomin.springboot.istio.annotation.Match;
+import com.github.piomin.springboot.istio.annotation.MatchMode;
+import com.github.piomin.springboot.istio.annotation.MatchType;
 import com.github.piomin.springboot.istio.service.IstioService;
 import io.fabric8.istio.api.networking.v1beta1.Destination;
+import io.fabric8.istio.api.networking.v1beta1.HTTPMatchRequest;
 import io.fabric8.istio.api.networking.v1beta1.HTTPRetry;
+import io.fabric8.istio.api.networking.v1beta1.StringMatchPrefix;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,14 +34,14 @@ public class IstioServiceTests {
 
     @Test
     public void buildRetryNull() {
-        EnableIstio enableIstio = createEnableIstio(0, 0, "");
+        EnableIstio enableIstio = createEnableIstio(0, 0, "", null);
         HTTPRetry retry = istioService.buildRetry(enableIstio);
         assertNull(retry);
     }
 
     @Test
     public void buildRetry() {
-        EnableIstio enableIstio = createEnableIstio(10, 3, "");
+        EnableIstio enableIstio = createEnableIstio(10, 3, "", null);
         HTTPRetry retry = istioService.buildRetry(enableIstio);
         assertNotNull(retry);
         assertEquals(Integer.valueOf(3), retry.getAttempts());
@@ -45,14 +50,25 @@ public class IstioServiceTests {
 
     @Test
     public void buildDestination() {
-        EnableIstio enableIstio = createEnableIstio(0, 0, "v1");
+        EnableIstio enableIstio = createEnableIstio(0, 0, "v1", null);
         Destination dest = istioService.buildDestination(enableIstio);
         assertNotNull(dest);
         assertEquals("v1", dest.getSubset());
         assertEquals("test1", dest.getHost());
     }
 
-    private EnableIstio createEnableIstio(int timeout, int numberOfRetries, String version) {
+    @Test
+    public void buildMatch() {
+        Match match = createMatch("/hello");
+        EnableIstio enableIstio = createEnableIstio(0, 0, "v1", match);
+        HTTPMatchRequest matchReq = istioService.buildHTTPMatchRequest(enableIstio.matches()[0]);
+        assertNotNull(matchReq);
+        assertNotNull(matchReq.getUri());
+        assertEquals(StringMatchPrefix.class, matchReq.getUri().getMatchType().getClass());
+        assertEquals("/hello", ((StringMatchPrefix) matchReq.getUri().getMatchType()).getPrefix());
+    }
+
+    private EnableIstio createEnableIstio(int timeout, int numberOfRetries, String version, Match match) {
         return new EnableIstio() {
 
             @Override
@@ -83,6 +99,46 @@ public class IstioServiceTests {
             @Override
             public int circuitBreakerErrors() {
                 return 0;
+            }
+
+            @Override
+            public Match[] matches() {
+                return new Match[] { match };
+            }
+        };
+    }
+
+    private Match createMatch(String value) {
+        return new Match() {
+
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return Match.class;
+            }
+
+            @Override
+            public boolean ignoreUriCase() {
+                return false;
+            }
+
+            @Override
+            public MatchType type() {
+                return MatchType.URI;
+            }
+
+            @Override
+            public MatchMode mode() {
+                return MatchMode.PREFIX;
+            }
+
+            @Override
+            public String value() {
+                return value;
+            }
+
+            @Override
+            public String key() {
+                return "";
             }
         };
     }

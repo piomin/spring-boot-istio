@@ -5,6 +5,8 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.ArrayList;
+import java.util.List;
 
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
@@ -23,4 +25,6 @@ public @interface EnableIstio {
     int numberOfRetries() default 0;
 
     int circuitBreakerErrors() default 0;
+
+    Match[] matches() default {};
 }
