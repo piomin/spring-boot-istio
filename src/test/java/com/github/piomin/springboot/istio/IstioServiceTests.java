@@ -84,6 +84,11 @@ public class IstioServiceTests {
             public int circuitBreakerErrors() {
                 return 0;
             }
+
+            @Override
+            public boolean enableGateway() {
+                return false;
+            }
         };
     }
 }

@@ -47,6 +47,18 @@ public class EnableIstioAnnotationProcessor {
         } else {
             editVirtualService(enableIstioAnnotation, vs);
         }
+
+        if (enableIstioAnnotation.enableGateway()) {
+            Resource<Gateway> gateway = istioClient
+                    .v1beta1()
+                    .gateways()
+                    .withName(istioService.getApplicationName());
+            if (gateway.item() == null) {
+                createNewGateway(enableIstioAnnotation);
+            } else {
+                editVirtualService(enableIstioAnnotation, vs);
+            }
+        }
     }
 
     private void createNewDestinationRule(EnableIstio enableIstioAnnotation) {
@@ -128,4 +140,33 @@ public class EnableIstioAnnotationProcessor {
 //                    .done();
         }
     }
+
+    private void createNewGateway(EnableIstio enableIstioAnnotation) {
+        Gateway gateway = new GatewayBuilder()
+                .withNewMetadata().withName(istioService.getApplicationName()).endMetadata()
+                .withNewSpec()
+                .addToSelector("istio", "ingressgateway")
+                .addToServers(new ServerBuilder()
+                        .withPort(new PortBuilder()
+                                .withNumber(80)
+                                .withProtocol("HTTP")
+                                .withName("http")
+                                .build())
+                        .addToHosts(istioService.getApplicationName() + ".ext")
+                        .build())
+                .endSpec()
+                .build();
+        gateway = istioClient.v1beta1().gateways().resource(gateway).create();
+        LOGGER.info("New Gateway created: \n{}", Serialization.asYaml(gateway));
+    }
+
+    private void editGateway(EnableIstio enableIstioAnnotation, Resource<Gateway> resource) {
+        LOGGER.info("Found Gateway: {}", resource.item());
+        Gateway gateway = (Gateway) resource;
+        if (!gateway.getSpec().getServers().get(0).getHosts().contains(istioService.getApplicationName()))
+            gateway.getSpec().getServers().get(0).getHosts().add(istioService.getApplicationName() + ".ext");
+        gateway = istioClient.v1beta1().gateways().resource(gateway).update();
+        LOGGER.info("Gateway updated: \n{}", Serialization.asYaml(gateway));
+    }
+
 }
