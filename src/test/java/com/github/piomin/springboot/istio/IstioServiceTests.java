@@ -103,6 +103,10 @@ public class IstioServiceTests {
             public Fault fault() {
                 return fault;
             }
+          
+            public boolean enableGateway() {
+                return false;
+            }
         };
     }
 

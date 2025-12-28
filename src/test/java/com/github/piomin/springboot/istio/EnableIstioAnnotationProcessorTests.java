@@ -64,6 +64,10 @@ public class EnableIstioAnnotationProcessorTests {
             public Fault fault() {
                 return null;
             }
+          
+            public boolean enableGateway() {
+                return false;
+            }
         };
     }
 }
