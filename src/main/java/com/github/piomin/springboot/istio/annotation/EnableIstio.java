@@ -24,5 +24,6 @@ public @interface EnableIstio {
 
     int circuitBreakerErrors() default 0;
 
+    Fault fault() default @Fault;
     boolean enableGateway() default false;
 }
