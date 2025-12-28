@@ -56,7 +56,7 @@ public class EnableIstioAnnotationProcessor {
             if (gateway.item() == null) {
                 createNewGateway(enableIstioAnnotation);
             } else {
-                editVirtualService(enableIstioAnnotation, vs);
+                editGateway(enableIstioAnnotation, gateway);
             }
         }
     }
@@ -163,8 +163,13 @@ public class EnableIstioAnnotationProcessor {
     private void editGateway(EnableIstio enableIstioAnnotation, Resource<Gateway> resource) {
         LOGGER.info("Found Gateway: {}", resource.item());
         Gateway gateway = (Gateway) resource;
-        if (!gateway.getSpec().getServers().get(0).getHosts().contains(istioService.getApplicationName()))
-            gateway.getSpec().getServers().get(0).getHosts().add(istioService.getApplicationName() + ".ext");
+        if (gateway.getSpec().getServers() != null && !gateway.getSpec().getServers().isEmpty()) {
+            Server server = gateway.getSpec().getServers().get(0);
+            String appHost = istioService.getApplicationName() + ".ext";
+            if (server.getHosts() != null && !server.getHosts().contains(appHost)) {
+                server.getHosts().add(appHost);
+            }
+        }
         gateway = istioClient.v1beta1().gateways().resource(gateway).update();
         LOGGER.info("Gateway updated: \n{}", Serialization.asYaml(gateway));
     }
