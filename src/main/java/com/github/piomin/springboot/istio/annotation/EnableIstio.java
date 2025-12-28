@@ -23,4 +23,6 @@ public @interface EnableIstio {
     int numberOfRetries() default 0;
 
     int circuitBreakerErrors() default 0;
+
+    boolean enableGateway() default false;
 }

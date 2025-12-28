@@ -58,6 +58,11 @@ public class EnableIstioAnnotationProcessorTests {
             public int circuitBreakerErrors() {
                 return 0;
             }
+
+            @Override
+            public boolean enableGateway() {
+                return false;
+            }
         };
     }
 }
