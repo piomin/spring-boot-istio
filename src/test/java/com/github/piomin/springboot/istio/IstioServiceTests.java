@@ -9,6 +9,10 @@ import io.fabric8.istio.api.networking.v1beta1.Destination;
 import io.fabric8.istio.api.networking.v1beta1.HTTPMatchRequest;
 import io.fabric8.istio.api.networking.v1beta1.HTTPRetry;
 import io.fabric8.istio.api.networking.v1beta1.StringMatchPrefix;
+import com.github.piomin.springboot.istio.annotation.Fault;
+import com.github.piomin.springboot.istio.annotation.FaultType;
+import com.github.piomin.springboot.istio.service.IstioService;
+import io.fabric8.istio.api.networking.v1beta1.*;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,8 +71,28 @@ public class IstioServiceTests {
         assertEquals(StringMatchPrefix.class, matchReq.getUri().getMatchType().getClass());
         assertEquals("/hello", ((StringMatchPrefix) matchReq.getUri().getMatchType()).getPrefix());
     }
+    
+    @Test  
+    public void buildFaultAbort() {
+        Fault fault = createFault(FaultType.ABORT);
+        EnableIstio enableIstio = createEnableIstio(0, 0, "v1", fault);
+        HTTPFaultInjection faultInjection = istioService.buildFault(enableIstio);
+        assertNotNull(faultInjection);
+        assertNotNull(faultInjection.getAbort());
+        assertEquals(HTTPFaultInjectionAbortHttpStatus.class, faultInjection.getAbort().getErrorType().getClass());
+    }
 
-    private EnableIstio createEnableIstio(int timeout, int numberOfRetries, String version, Match match) {
+    @Test
+    public void buildFaultDelay() {
+        Fault fault = createFault(FaultType.DELAY);
+        EnableIstio enableIstio = createEnableIstio(0, 0, "v1", fault);
+        HTTPFaultInjection faultInjection = istioService.buildFault(enableIstio);
+        assertNotNull(faultInjection);
+        assertNotNull(faultInjection.getDelay());
+        assertEquals(HTTPFaultInjectionDelayFixedDelay.class, faultInjection.getDelay().getHttpDelayType().getClass());
+    }
+
+    private EnableIstio createEnableIstio(int timeout, int numberOfRetries, String version, Fault fault, Match match) {
         return new EnableIstio() {
 
             @Override
@@ -105,6 +129,16 @@ public class IstioServiceTests {
             public Match[] matches() {
                 return new Match[] { match };
             }
+          
+            @Override
+            public Fault fault() {
+                return fault;
+            }
+          
+            @Override
+            public boolean enableGateway() {
+                return false;
+            }
         };
     }
 
@@ -139,6 +173,37 @@ public class IstioServiceTests {
             @Override
             public String key() {
                 return "";
+            }
+
+        };
+    }
+
+    private Fault createFault(FaultType faultType) {
+        return new Fault() {
+
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return Fault.class;
+            }
+
+            @Override
+            public FaultType type() {
+                return faultType;
+            }
+
+            @Override
+            public int percentage() {
+                return 100;
+            }
+
+            @Override
+            public int httpStatus() {
+                return 500;
+            }
+
+            @Override
+            public long delay() {
+                return 1000;
             }
         };
     }

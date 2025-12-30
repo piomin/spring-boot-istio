@@ -1,5 +1,6 @@
 package com.github.piomin.springboot.istio;
 
+import io.fabric8.istio.api.networking.v1beta1.Gateway;
 import io.fabric8.istio.api.networking.v1beta1.VirtualService;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -42,6 +43,11 @@ public class IstioServiceIT {
                     .withName("sample-app-with-istio-route")
                     .get();
             Assertions.assertNotNull(vs);
+
+            Gateway gateway = client.resources(Gateway.class)
+                    .withName("sample-app-with-istio")
+                    .get();
+            Assertions.assertNotNull(gateway);
         }
     }
 }
