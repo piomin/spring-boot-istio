@@ -88,7 +88,7 @@ public class IstioService {
         else
             return new HTTPFaultInjectionBuilder()
                     .withNewDelay()
-                    .withNewPercentage().withValue((double) enableIstio.fault().percentage())
+                    .withNewPercentage()
                         .withValue((double) enableIstio.fault().percentage())
                     .endPercentage()
                     .withNewHTTPFaultInjectionDelayFixedHttpType()

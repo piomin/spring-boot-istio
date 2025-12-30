@@ -4,10 +4,7 @@ import com.github.piomin.springboot.istio.annotation.EnableIstio;
 import com.github.piomin.springboot.istio.annotation.Fault;
 import com.github.piomin.springboot.istio.annotation.FaultType;
 import com.github.piomin.springboot.istio.service.IstioService;
-import io.fabric8.istio.api.networking.v1beta1.Destination;
-import io.fabric8.istio.api.networking.v1beta1.HTTPFaultInjection;
-import io.fabric8.istio.api.networking.v1beta1.HTTPFaultInjectionAbortHttpStatus;
-import io.fabric8.istio.api.networking.v1beta1.HTTPRetry;
+import io.fabric8.istio.api.networking.v1beta1.*;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,13 +54,23 @@ public class IstioServiceTests {
     }
 
     @Test
-    public void buildFault() {
-        Fault fault = createFault();
+    public void buildFaultAbort() {
+        Fault fault = createFault(FaultType.ABORT);
         EnableIstio enableIstio = createEnableIstio(0, 0, "v1", fault);
         HTTPFaultInjection faultInjection = istioService.buildFault(enableIstio);
         assertNotNull(faultInjection);
         assertNotNull(faultInjection.getAbort());
         assertEquals(HTTPFaultInjectionAbortHttpStatus.class, faultInjection.getAbort().getErrorType().getClass());
+    }
+
+    @Test
+    public void buildFaultDelay() {
+        Fault fault = createFault(FaultType.DELAY);
+        EnableIstio enableIstio = createEnableIstio(0, 0, "v1", fault);
+        HTTPFaultInjection faultInjection = istioService.buildFault(enableIstio);
+        assertNotNull(faultInjection);
+        assertNotNull(faultInjection.getDelay());
+        assertEquals(HTTPFaultInjectionDelayFixedDelay.class, faultInjection.getDelay().getHttpDelayType().getClass());
     }
 
     private EnableIstio createEnableIstio(int timeout, int numberOfRetries, String version, Fault fault) {
@@ -110,7 +117,7 @@ public class IstioServiceTests {
         };
     }
 
-    private Fault createFault() {
+    private Fault createFault(FaultType faultType) {
         return new Fault() {
 
             @Override
@@ -120,7 +127,7 @@ public class IstioServiceTests {
 
             @Override
             public FaultType type() {
-                return FaultType.ABORT;
+                return faultType;
             }
 
             @Override
@@ -135,7 +142,7 @@ public class IstioServiceTests {
 
             @Override
             public long delay() {
-                return 0;
+                return 1000;
             }
         };
     }
