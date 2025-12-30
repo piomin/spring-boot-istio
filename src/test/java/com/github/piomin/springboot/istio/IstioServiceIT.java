@@ -15,7 +15,7 @@ import java.io.IOException;
 @SpringBootTest
 public class IstioServiceIT {
 
-    private final static String K8S_TEST_CONTEXT = "kind-c1";
+    private final static String K8S_TEST_CONTEXT = "minikube";
 
     @BeforeAll
     static void setup() throws IOException, InterruptedException {

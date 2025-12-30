@@ -92,7 +92,7 @@ public class IstioService {
                 .withAttempts(enableIstio.numberOfRetries())
                 .withRetryOn(RETRY_CODES)
                 .withPerTryTimeout(enableIstio.timeout() != 0 ?
-                        formatDuration(ratioTimeout * 1000, "s's'") : null)
+                        formatDuration(ratioTimeout, "s's'") : null)
                 .build();
     }
 

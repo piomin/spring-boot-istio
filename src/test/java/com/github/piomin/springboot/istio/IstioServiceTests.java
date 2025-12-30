@@ -11,7 +11,6 @@ import io.fabric8.istio.api.networking.v1beta1.HTTPRetry;
 import io.fabric8.istio.api.networking.v1beta1.StringMatchPrefix;
 import com.github.piomin.springboot.istio.annotation.Fault;
 import com.github.piomin.springboot.istio.annotation.FaultType;
-import com.github.piomin.springboot.istio.service.IstioService;
 import io.fabric8.istio.api.networking.v1beta1.*;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import org.junit.jupiter.api.Test;

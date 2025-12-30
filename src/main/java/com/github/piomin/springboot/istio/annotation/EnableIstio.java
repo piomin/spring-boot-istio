@@ -10,7 +10,7 @@ public @interface EnableIstio {
      * Timeout in seconds
      * @return timeout value
      */
-    int timeout() default 0;
+    int timeout() default 6000;
 
     /**
      * Version of the service set in the destination rule
@@ -22,13 +22,13 @@ public @interface EnableIstio {
      * Weight of the service (0-100) set in the destination rule
      * @return weight value
      */
-    int weight() default 0;
+    int weight() default 100;
 
     /**
      * Number of retries
      * @return number of retries value
      */
-    int numberOfRetries() default 0;
+    int numberOfRetries() default 3;
 
     int circuitBreakerErrors() default 0;
 
