@@ -1,6 +1,7 @@
 package com.github.piomin.springboot.istio.service;
 
 import com.github.piomin.springboot.istio.annotation.EnableIstio;
+import com.github.piomin.springboot.istio.annotation.FaultType;
 import io.fabric8.istio.api.networking.v1beta1.*;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
@@ -72,6 +73,29 @@ public class IstioService {
                 .withHost(getApplicationName())
                 .withSubset(enableIstio.version())
                 .build();
+    }
+
+    public HTTPFaultInjection buildFault(EnableIstio enableIstio) {
+        if (enableIstio.fault().type().equals(FaultType.ABORT))
+            return new HTTPFaultInjectionBuilder()
+                    .withNewAbort()
+                    .withNewPercentage()
+                        .withValue((double) enableIstio.fault().percentage())
+                    .endPercentage()
+                    .withNewHTTPFaultInjectionAbortHttpStatusErrorType(enableIstio.fault().httpStatus())
+                    .endAbort()
+                    .build();
+        else
+            return new HTTPFaultInjectionBuilder()
+                    .withNewDelay()
+                    .withNewPercentage()
+                        .withValue((double) enableIstio.fault().percentage())
+                    .endPercentage()
+                    .withNewHTTPFaultInjectionDelayFixedHttpType()
+                        .withFixedDelay(formatDuration(enableIstio.fault().delay(), "s's'"))
+                    .endHTTPFaultInjectionDelayFixedHttpType()
+                    .endDelay()
+                    .build();
     }
 
 }

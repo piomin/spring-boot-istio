@@ -1,9 +1,10 @@
 package com.github.piomin.springboot.istio;
 
 import com.github.piomin.springboot.istio.annotation.EnableIstio;
+import com.github.piomin.springboot.istio.annotation.Fault;
+import com.github.piomin.springboot.istio.annotation.FaultType;
 import com.github.piomin.springboot.istio.service.IstioService;
-import io.fabric8.istio.api.networking.v1beta1.Destination;
-import io.fabric8.istio.api.networking.v1beta1.HTTPRetry;
+import io.fabric8.istio.api.networking.v1beta1.*;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,14 +30,14 @@ public class IstioServiceTests {
 
     @Test
     public void buildRetryNull() {
-        EnableIstio enableIstio = createEnableIstio(0, 0, "");
+        EnableIstio enableIstio = createEnableIstio(0, 0, "", null);
         HTTPRetry retry = istioService.buildRetry(enableIstio);
         assertNull(retry);
     }
 
     @Test
     public void buildRetry() {
-        EnableIstio enableIstio = createEnableIstio(10, 3, "");
+        EnableIstio enableIstio = createEnableIstio(10, 3, "", null);
         HTTPRetry retry = istioService.buildRetry(enableIstio);
         assertNotNull(retry);
         assertEquals(Integer.valueOf(3), retry.getAttempts());
@@ -45,14 +46,34 @@ public class IstioServiceTests {
 
     @Test
     public void buildDestination() {
-        EnableIstio enableIstio = createEnableIstio(0, 0, "v1");
+        EnableIstio enableIstio = createEnableIstio(0, 0, "v1", null);
         Destination dest = istioService.buildDestination(enableIstio);
         assertNotNull(dest);
         assertEquals("v1", dest.getSubset());
         assertEquals("test1", dest.getHost());
     }
 
-    private EnableIstio createEnableIstio(int timeout, int numberOfRetries, String version) {
+    @Test
+    public void buildFaultAbort() {
+        Fault fault = createFault(FaultType.ABORT);
+        EnableIstio enableIstio = createEnableIstio(0, 0, "v1", fault);
+        HTTPFaultInjection faultInjection = istioService.buildFault(enableIstio);
+        assertNotNull(faultInjection);
+        assertNotNull(faultInjection.getAbort());
+        assertEquals(HTTPFaultInjectionAbortHttpStatus.class, faultInjection.getAbort().getErrorType().getClass());
+    }
+
+    @Test
+    public void buildFaultDelay() {
+        Fault fault = createFault(FaultType.DELAY);
+        EnableIstio enableIstio = createEnableIstio(0, 0, "v1", fault);
+        HTTPFaultInjection faultInjection = istioService.buildFault(enableIstio);
+        assertNotNull(faultInjection);
+        assertNotNull(faultInjection.getDelay());
+        assertEquals(HTTPFaultInjectionDelayFixedDelay.class, faultInjection.getDelay().getHttpDelayType().getClass());
+    }
+
+    private EnableIstio createEnableIstio(int timeout, int numberOfRetries, String version, Fault fault) {
         return new EnableIstio() {
 
             @Override
@@ -86,8 +107,42 @@ public class IstioServiceTests {
             }
 
             @Override
+            public Fault fault() {
+                return fault;
+            }
+          
             public boolean enableGateway() {
                 return false;
+            }
+        };
+    }
+
+    private Fault createFault(FaultType faultType) {
+        return new Fault() {
+
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return Fault.class;
+            }
+
+            @Override
+            public FaultType type() {
+                return faultType;
+            }
+
+            @Override
+            public int percentage() {
+                return 100;
+            }
+
+            @Override
+            public int httpStatus() {
+                return 500;
+            }
+
+            @Override
+            public long delay() {
+                return 1000;
             }
         };
     }

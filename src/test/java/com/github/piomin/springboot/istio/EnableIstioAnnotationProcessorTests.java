@@ -1,6 +1,7 @@
 package com.github.piomin.springboot.istio;
 
 import com.github.piomin.springboot.istio.annotation.EnableIstio;
+import com.github.piomin.springboot.istio.annotation.Fault;
 import com.github.piomin.springboot.istio.processor.EnableIstioAnnotationProcessor;
 import com.github.piomin.springboot.istio.service.IstioService;
 import io.fabric8.istio.client.DefaultIstioClient;
@@ -60,6 +61,10 @@ public class EnableIstioAnnotationProcessorTests {
             }
 
             @Override
+            public Fault fault() {
+                return null;
+            }
+          
             public boolean enableGateway() {
                 return false;
             }

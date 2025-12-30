@@ -104,6 +104,7 @@ public class EnableIstioAnnotationProcessor {
                 .addToHosts(istioService.getApplicationName())
                 .addNewHttp()
                 .withTimeout(enableIstioAnnotation.timeout() == 0 ? null : formatDuration(enableIstioAnnotation.timeout(), "s's'"))
+                .withFault(enableIstioAnnotation.fault().percentage() == 0 ? null : istioService.buildFault(enableIstioAnnotation))
                 .withRetries(istioService.buildRetry(enableIstioAnnotation))
                 .addNewRoute().withNewDestinationLike(istioService.buildDestination(enableIstioAnnotation))
                 .endDestination().endRoute()
@@ -121,6 +122,7 @@ public class EnableIstioAnnotationProcessor {
             vs.getSpec().getHttp().get(0).setTimeout(enableIstioAnnotation
                     .timeout() == 0 ? null : formatDuration(enableIstioAnnotation.timeout(), "s's'"));
             vs.getSpec().getHttp().get(0).setRetries(istioService.buildRetry(enableIstioAnnotation));
+            vs.getSpec().getHttp().get(0).setFault(enableIstioAnnotation.fault().percentage() == 0 ? null : istioService.buildFault(enableIstioAnnotation));
             vs.getSpec().getHttp().get(0).getRoute().get(0).setWeight(enableIstioAnnotation.weight() == 0 ? null : enableIstioAnnotation.weight());
             vs.getSpec().getHttp().get(0).getRoute().get(0).setDestination(istioService.buildDestination(enableIstioAnnotation));
             istioClient.v1beta1().virtualServices().createOrReplace(vs);
