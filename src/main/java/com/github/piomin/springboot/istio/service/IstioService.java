@@ -1,12 +1,16 @@
 package com.github.piomin.springboot.istio.service;
 
 import com.github.piomin.springboot.istio.annotation.EnableIstio;
+import com.github.piomin.springboot.istio.annotation.Match;
+import com.github.piomin.springboot.istio.annotation.MatchMode;
+import com.github.piomin.springboot.istio.annotation.MatchType;
 import com.github.piomin.springboot.istio.annotation.FaultType;
 import io.fabric8.istio.api.networking.v1beta1.*;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.util.Map;
 import java.util.Optional;
 
 import static org.apache.commons.lang3.time.DurationFormatUtils.formatDuration;
@@ -54,6 +58,30 @@ public class IstioService {
                 .withName(enableIstio.version())
                 .addToLabels("version", enableIstio.version())
                 .build();
+    }
+
+    public HTTPMatchRequest buildHTTPMatchRequest(Match match) {
+        HTTPMatchRequestBuilder builder = new HTTPMatchRequestBuilder();
+        StringMatchBuilder matchBuilder = new StringMatchBuilder();
+        if (match.mode().equals(MatchMode.EXACT))
+            matchBuilder = matchBuilder.withNewStringMatchExactType(match.value());
+        else if (match.mode().equals(MatchMode.PREFIX))
+            matchBuilder = matchBuilder.withNewStringMatchPrefixType(match.value());
+        else
+            matchBuilder = matchBuilder.withNewStringMatchRegexType(match.value());
+        if (match.type() == MatchType.URI)
+            builder = builder.withUri(matchBuilder.build());
+        else if (match.type() == MatchType.HEADERS)
+            builder = builder.withHeaders(Map.of(match.key(), matchBuilder.build()));
+        else if (match.type() == MatchType.METHOD)
+            builder = builder.withMethod(matchBuilder.build());
+        else if (match.type() == MatchType.GATEWAYS)
+            builder = builder.withGateways(match.value());
+        else if (match.type() == MatchType.QUERY_PARAMS)
+            builder = builder.withQueryParams(Map.of(match.key(), matchBuilder.build()));
+        else
+            builder = builder.withSourceLabels(Map.of(match.key(), match.value()));
+        return builder.withIgnoreUriCase(match.ignoreUriCase()).build();
     }
 
     public HTTPRetry buildRetry(EnableIstio enableIstio) {

@@ -1,5 +1,6 @@
 package com.github.piomin.springboot.istio.processor;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -97,6 +98,9 @@ public class EnableIstioAnnotationProcessor {
                 .addToHosts(istioService.getApplicationName())
                 .addToGateways(enableIstioAnnotation.enableGateway() ? istioService.getApplicationName() : null)
                 .addNewHttp()
+                .withMatch(Arrays.stream(enableIstioAnnotation.matches())
+                        .map(m -> istioService.buildHTTPMatchRequest(m))
+                        .toArray(HTTPMatchRequest[]::new))
                 .withTimeout(enableIstioAnnotation.timeout() == 0 ? null : formatDuration(enableIstioAnnotation.timeout(), "s's'"))
                 .withFault(enableIstioAnnotation.fault().percentage() == 0 ? null : istioService.buildFault(enableIstioAnnotation))
                 .withRetries(istioService.buildRetry(enableIstioAnnotation))
