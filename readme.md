@@ -28,16 +28,16 @@ Add the dependency to your Maven `pom.xml`:
 <dependency>
   <groupId>com.github.piomin</groupId>
   <artifactId>istio-spring-boot-starter</artifactId>
-  <version>1.1.0</version>
+  <version>1.2.0</version>
 </dependency>
 ```
 
 ## Usage
 
-The library provides auto-configured support for creating Istio resources on Kubernetes basing on annotation `@EnableIstio`.
+The library provides autoconfigured support for creating Istio resources on Kubernetes basing on annotation `@EnableIstio`.
 ```
 @SpringBootApplication
-@EnableIstio(version = "v1", retries = 3, timeout = 3)
+@EnableIstio(version = "v1")
 public class CallmeApplication {
 
 	public static void main(String[] args) {
@@ -47,22 +47,39 @@ public class CallmeApplication {
 }
 ```
 
+We can enable additional things. For example, we can enable `Gateway` and `VirtualService` with fault injection or matches in `VirtualService`.
+```java
+@SpringBootApplication
+@EnableIstio(enableGateway = true,
+        fault = @Fault(type = FaultType.ABORT, percentage = 50),
+        matches = { @Match("/hello"), @Match("/hello2") })
+public class SampleAppWithIstio {
+    public static void main(String[] args) {
+        SpringApplication.run(SampleAppWithIstio.class, args);
+    }
+}
+```
+
 The `@EnableIstio` annotation provides the following configuration options:
 
-| Parameter              | Type   | Default | Description                                         |
-|------------------------|--------|---------|-----------------------------------------------------|
-| `version`              | String | -       | (Required) Version label for the service            |
-| `numberOfRetries`      | int    | 0       | Number of retries for failed requests               |
-| `timeout`              | int    | 0       | Request timeout in seconds (0 means no timeout)     |
-| `circuitBreakerErrors` | String | -       | Number of errors in row to trip the circuit breaker |
-| `weight`               | String | 0       | A weight ot path in load balancing                  |
+| Parameter              | Type    | Default | Description                                            |
+|------------------------|---------|---------|--------------------------------------------------------|
+| `version`              | String  | -       | (Required) Version label for the service               |
+| `numberOfRetries`      | int     | 0       | Number of retries for failed requests                  |
+| `timeout`              | int     | 0       | Request timeout in seconds (0 means no timeout)        |
+| `circuitBreakerErrors` | String  | -       | Number of errors in row to trip the circuit breaker    |
+| `weight`               | String  | 0       | A weight ot path in load balancing                     |
+| `enableGateway`        | boolean | false   | Enable Istio `Gateway` generation                      |
+| `fault`                | Fault   | @Fault  | Enable Istio fault (delay. abort) injection            |
+| `matches`              | Match[] | {}      | Enable multiple matches (e.g. uri, headers) generation |
 
 ### How It Works
 
 The library automatically creates the following Istio resources during application startup:
 
 `DestinationRule`: Defines policies for traffic routing, including load balancing and connection pool settings.\
-`VirtualService`: Configures request routing, retries, timeouts, and fault injection.
+`VirtualService`: Configures request routing, retries, timeouts, matches, and fault injection.
+`Gateway`: Exposes the service to external traffic.
 
 Here's the architecture of presented solution. Spring Boot Istio Library is included to the target application. It uses Java Istio Client to communication with istiod. During application startup the library is communicating with Istio API in order to create `DestinationRule` and `VirtualService` objects.
 
