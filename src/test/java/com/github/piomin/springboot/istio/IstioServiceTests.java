@@ -38,14 +38,14 @@ public class IstioServiceTests {
 
     @Test
     public void buildRetryNull() {
-        EnableIstio enableIstio = createEnableIstio(0, 0, "", null);
+        EnableIstio enableIstio = createEnableIstio(0, 0, "", null, null);
         HTTPRetry retry = istioService.buildRetry(enableIstio);
         assertNull(retry);
     }
 
     @Test
     public void buildRetry() {
-        EnableIstio enableIstio = createEnableIstio(10, 3, "", null);
+        EnableIstio enableIstio = createEnableIstio(10, 3, "", null, null);
         HTTPRetry retry = istioService.buildRetry(enableIstio);
         assertNotNull(retry);
         assertEquals(Integer.valueOf(3), retry.getAttempts());
@@ -54,7 +54,7 @@ public class IstioServiceTests {
 
     @Test
     public void buildDestination() {
-        EnableIstio enableIstio = createEnableIstio(0, 0, "v1", null);
+        EnableIstio enableIstio = createEnableIstio(0, 0, "v1", null, null);
         Destination dest = istioService.buildDestination(enableIstio);
         assertNotNull(dest);
         assertEquals("v1", dest.getSubset());
@@ -64,7 +64,7 @@ public class IstioServiceTests {
     @Test
     public void buildMatch() {
         Match match = createMatch("/hello");
-        EnableIstio enableIstio = createEnableIstio(0, 0, "v1", match);
+        EnableIstio enableIstio = createEnableIstio(0, 0, "v1", null, match);
         HTTPMatchRequest matchReq = istioService.buildHTTPMatchRequest(enableIstio.matches()[0]);
         assertNotNull(matchReq);
         assertNotNull(matchReq.getUri());
@@ -75,7 +75,7 @@ public class IstioServiceTests {
     @Test  
     public void buildFaultAbort() {
         Fault fault = createFault(FaultType.ABORT);
-        EnableIstio enableIstio = createEnableIstio(0, 0, "v1", fault);
+        EnableIstio enableIstio = createEnableIstio(0, 0, "v1", fault, null);
         HTTPFaultInjection faultInjection = istioService.buildFault(enableIstio);
         assertNotNull(faultInjection);
         assertNotNull(faultInjection.getAbort());
@@ -85,7 +85,7 @@ public class IstioServiceTests {
     @Test
     public void buildFaultDelay() {
         Fault fault = createFault(FaultType.DELAY);
-        EnableIstio enableIstio = createEnableIstio(0, 0, "v1", fault);
+        EnableIstio enableIstio = createEnableIstio(0, 0, "v1", fault, null);
         HTTPFaultInjection faultInjection = istioService.buildFault(enableIstio);
         assertNotNull(faultInjection);
         assertNotNull(faultInjection.getDelay());

@@ -77,6 +77,8 @@ public class IstioService {
             builder = builder.withMethod(matchBuilder.build());
         else if (match.type() == MatchType.GATEWAYS)
             builder = builder.withGateways(match.value());
+        else if (match.type() == MatchType.QUERY_PARAMS)
+            builder = builder.withQueryParams(Map.of(match.key(), matchBuilder.build()));
         else
             builder = builder.withSourceLabels(Map.of(match.key(), match.value()));
         return builder.withIgnoreUriCase(match.ignoreUriCase()).build();

@@ -1,12 +1,6 @@
 package com.github.piomin.springboot.istio.annotation;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.util.ArrayList;
-import java.util.List;
+import java.lang.annotation.*;
 
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
@@ -18,10 +12,22 @@ public @interface EnableIstio {
      */
     int timeout() default 0;
 
+    /**
+     * Version of the service set in the destination rule
+     * @return version value
+     */
     String version() default "";
 
+    /**
+     * Weight of the service (0-100) set in the destination rule
+     * @return weight value
+     */
     int weight() default 0;
 
+    /**
+     * Number of retries
+     * @return number of retries value
+     */
     int numberOfRetries() default 0;
 
     int circuitBreakerErrors() default 0;
