@@ -44,7 +44,7 @@ public class IstioServiceTests {
 
     @Test
     public void buildRetry() {
-        EnableIstio enableIstio = createEnableIstio(10, 3, "", null, null);
+        EnableIstio enableIstio = createEnableIstio(10000, 3, "", null, null);
         HTTPRetry retry = istioService.buildRetry(enableIstio);
         assertNotNull(retry);
         assertEquals(Integer.valueOf(3), retry.getAttempts());
