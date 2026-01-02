@@ -92,14 +92,15 @@ public class EnableIstioAnnotationProcessor {
     }
 
     private void createNewVirtualService(EnableIstio enableIstioAnnotation) {
-        VirtualService vs = new VirtualServiceBuilder()
+        VirtualServiceBuilder vsBuilder = new VirtualServiceBuilder();
+        vsBuilder = vsBuilder
                 .withNewMetadata().withName(istioService.getVirtualServiceName()).endMetadata()
                 .withNewSpec()
-                .addToHosts(istioService.getApplicationName())
-                .addToGateways(enableIstioAnnotation.enableGateway() ? istioService.getApplicationName() : null)
+                .withHosts(addToHosts(enableIstioAnnotation))
+//                .withGateways(enableIstioAnnotation.enableGateway() ? istioService.getApplicationName() : "null")
                 .addNewHttp()
                 .withMatch(Arrays.stream(enableIstioAnnotation.matches())
-                        .map(m -> istioService.buildHTTPMatchRequest(m))
+                        .map(istioService::buildHTTPMatchRequest)
                         .toArray(HTTPMatchRequest[]::new))
                 .withTimeout(enableIstioAnnotation.timeout() == 0 ? null : formatDuration(enableIstioAnnotation.timeout(), "s's'"))
                 .withFault(enableIstioAnnotation.fault().percentage() == 0 ? null : istioService.buildFault(enableIstioAnnotation))
@@ -107,8 +108,11 @@ public class EnableIstioAnnotationProcessor {
                 .addNewRoute().withNewDestinationLike(istioService.buildDestination(enableIstioAnnotation))
                 .endDestination().endRoute()
                 .endHttp()
-                .endSpec()
-                .build();
+                .endSpec();
+        if (enableIstioAnnotation.enableGateway()) {
+            vsBuilder = vsBuilder.editSpec().withGateways(istioService.getApplicationName()).endSpec();
+        }
+        VirtualService vs = vsBuilder.build();
         vs = istioClient.v1beta1().virtualServices().resource(vs).create();
         LOGGER.info("New VirtualService created: \n{}", Serialization.asYaml(vs));
     }
@@ -117,7 +121,7 @@ public class EnableIstioAnnotationProcessor {
         LOGGER.info("Found VirtualService: {}", resource.item());
         if (!enableIstioAnnotation.version().isEmpty()) {
             VirtualService vs = (VirtualService) resource;
-            vs.getSpec().setHosts(List.of(istioService.getApplicationName()));
+            vs.getSpec().setHosts(List.of(addToHosts(enableIstioAnnotation)));
             vs.getSpec().setGateways(enableIstioAnnotation.enableGateway() ? List.of(istioService.getApplicationName()) : null);
             vs.getSpec().getHttp().get(0).setTimeout(enableIstioAnnotation
                     .timeout() == 0 ? null : formatDuration(enableIstioAnnotation.timeout(), "s's'"));
@@ -162,5 +166,13 @@ public class EnableIstioAnnotationProcessor {
         gateway = istioClient.v1beta1().gateways().resource(gateway).update();
         LOGGER.info("Gateway updated: \n{}", Serialization.asYaml(gateway));
     }
+
+    private String[] addToHosts(EnableIstio enableIstioAnnotation) {
+        if (enableIstioAnnotation.enableGateway())
+            return new String[] { istioService.getApplicationName(), istioService.getApplicationName() + ".ext"};
+        else return new String[] { istioService.getApplicationName() };
+    }
+
+
 
 }
