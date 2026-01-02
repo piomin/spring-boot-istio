@@ -122,7 +122,9 @@ public class EnableIstioAnnotationProcessor {
         if (!enableIstioAnnotation.version().isEmpty()) {
             VirtualService vs = (VirtualService) resource;
             vs.getSpec().setHosts(List.of(addToHosts(enableIstioAnnotation)));
-            vs.getSpec().setGateways(enableIstioAnnotation.enableGateway() ? List.of(istioService.getApplicationName()) : null);
+            if (enableIstioAnnotation.enableGateway()) {
+                vs.getSpec().setGateways(List.of(istioService.getApplicationName()));
+            }
             vs.getSpec().getHttp().get(0).setTimeout(enableIstioAnnotation
                     .timeout() == 0 ? null : formatDuration(enableIstioAnnotation.timeout(), "s's'"));
             vs.getSpec().getHttp().get(0).setRetries(istioService.buildRetry(enableIstioAnnotation));
