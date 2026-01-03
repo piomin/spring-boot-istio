@@ -29,32 +29,35 @@ public class EnableIstioAnnotationProcessor {
     public void process(EnableIstio enableIstioAnnotation) {
         LOGGER.info("Istio feature enabled: {}", enableIstioAnnotation);
 
-        Resource<DestinationRule> dr = istioClient
+        DestinationRule dr = istioClient
                 .v1beta1()
                 .destinationRules()
-                .withName(istioService.getDestinationRuleName());
-        if (dr.item() == null) {
+                .withName(istioService.getDestinationRuleName())
+                .get();
+        if (dr == null) {
             createNewDestinationRule(enableIstioAnnotation);
         } else {
             editDestinationRule(enableIstioAnnotation, dr);
         }
 
-        Resource<VirtualService> vs = istioClient
+        VirtualService vs = istioClient
                 .v1beta1()
                 .virtualServices()
-                .withName(istioService.getVirtualServiceName());
-        if (vs.item() == null) {
+                .withName(istioService.getVirtualServiceName())
+                .get();
+        if (vs == null) {
             createNewVirtualService(enableIstioAnnotation);
         } else {
             editVirtualService(enableIstioAnnotation, vs);
         }
 
         if (enableIstioAnnotation.enableGateway()) {
-            Resource<Gateway> gateway = istioClient
+            Gateway gateway = istioClient
                     .v1beta1()
                     .gateways()
-                    .withName(istioService.getApplicationName());
-            if (gateway.item() == null) {
+                    .withName(istioService.getApplicationName())
+                    .get();
+            if (gateway == null) {
                 createNewGateway(enableIstioAnnotation);
             } else {
                 editGateway(enableIstioAnnotation, gateway);
@@ -77,10 +80,9 @@ public class EnableIstioAnnotationProcessor {
         LOGGER.info("New DestinationRule created: \n{}", Serialization.asYaml(dr));
     }
 
-    private void editDestinationRule(EnableIstio enableIstioAnnotation, Resource<DestinationRule> resource) {
-        LOGGER.info("Found DestinationRule: {}", resource.item());
+    private void editDestinationRule(EnableIstio enableIstioAnnotation, DestinationRule dr) {
+        LOGGER.info("Found DestinationRule: {}", dr);
         if (!enableIstioAnnotation.version().isEmpty()) {
-            DestinationRule dr = (DestinationRule) resource;
             Optional<Subset> subset = dr.getSpec().getSubsets().stream()
                     .filter(s -> s.getName().equals(enableIstioAnnotation.version()))
                     .findAny();
@@ -117,23 +119,22 @@ public class EnableIstioAnnotationProcessor {
         LOGGER.info("New VirtualService created: \n{}", Serialization.asYaml(vs));
     }
 
-    private void editVirtualService(EnableIstio enableIstioAnnotation, Resource<VirtualService> resource) {
-        LOGGER.info("Found VirtualService: {}", resource.item());
-        if (!enableIstioAnnotation.version().isEmpty()) {
-            VirtualService vs = (VirtualService) resource;
-            vs.getSpec().setHosts(List.of(addToHosts(enableIstioAnnotation)));
-            if (enableIstioAnnotation.enableGateway()) {
-                vs.getSpec().setGateways(List.of(istioService.getApplicationName()));
-            }
-            vs.getSpec().getHttp().get(0).setTimeout(enableIstioAnnotation
-                    .timeout() == 0 ? null : formatDuration(enableIstioAnnotation.timeout(), "s's'"));
-            vs.getSpec().getHttp().get(0).setRetries(istioService.buildRetry(enableIstioAnnotation));
-            vs.getSpec().getHttp().get(0).setFault(enableIstioAnnotation.fault().percentage() == 0 ? null : istioService.buildFault(enableIstioAnnotation));
-            vs.getSpec().getHttp().get(0).getRoute().get(0).setWeight(enableIstioAnnotation.weight() == 0 ? null : enableIstioAnnotation.weight());
-            vs.getSpec().getHttp().get(0).getRoute().get(0).setDestination(istioService.buildDestination(enableIstioAnnotation));
-            vs = istioClient.v1beta1().virtualServices().resource(vs).update();
-            LOGGER.info("VirtualService updated: \n{}", Serialization.asYaml(vs));
+    private void editVirtualService(EnableIstio enableIstioAnnotation, VirtualService vs) {
+        LOGGER.info("Found VirtualService: {}", vs);
+        vs.getSpec().setHosts(List.of(addToHosts(enableIstioAnnotation)));
+        if (enableIstioAnnotation.enableGateway()) {
+            vs.getSpec().setGateways(List.of(istioService.getApplicationName()));
         }
+        vs.getSpec().getHttp().get(0).setTimeout(enableIstioAnnotation
+                .timeout() == 0 ? null : formatDuration(enableIstioAnnotation.timeout(), "s's'"));
+        vs.getSpec().getHttp().get(0).setRetries(istioService.buildRetry(enableIstioAnnotation));
+        vs.getSpec().getHttp().get(0).setFault(enableIstioAnnotation.fault().percentage() == 0 ? null : istioService.buildFault(enableIstioAnnotation));
+        if (!enableIstioAnnotation.version().isEmpty()) {
+            vs.getSpec().getHttp().get(0).getRoute().get(0).setWeight(enableIstioAnnotation.weight() == 0 ? null : enableIstioAnnotation.weight());
+        }
+        vs.getSpec().getHttp().get(0).getRoute().get(0).setDestination(istioService.buildDestination(enableIstioAnnotation));
+        vs = istioClient.v1beta1().virtualServices().resource(vs).update();
+        LOGGER.info("VirtualService updated: \n{}", Serialization.asYaml(vs));
     }
 
     private void createNewGateway(EnableIstio enableIstioAnnotation) {
@@ -155,9 +156,8 @@ public class EnableIstioAnnotationProcessor {
         LOGGER.info("New Gateway created: \n{}", Serialization.asYaml(gateway));
     }
 
-    private void editGateway(EnableIstio enableIstioAnnotation, Resource<Gateway> resource) {
-        LOGGER.info("Found Gateway: {}", resource.item());
-        Gateway gateway = (Gateway) resource;
+    private void editGateway(EnableIstio enableIstioAnnotation, Gateway gateway) {
+        LOGGER.info("Found Gateway: {}", gateway);
         if (gateway.getSpec().getServers() != null && !gateway.getSpec().getServers().isEmpty()) {
             Server server = gateway.getSpec().getServers().get(0);
             String appHost = istioService.getApplicationName() + ".ext";
