@@ -35,7 +35,7 @@ Add the dependency to your Maven `pom.xml`:
 ## Usage
 
 The library provides autoconfigured support for creating Istio resources on Kubernetes basing on annotation `@EnableIstio`.
-```
+```java
 @SpringBootApplication
 @EnableIstio(version = "v1")
 public class CallmeApplication {

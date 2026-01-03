@@ -106,6 +106,8 @@ jobs:
           command: |
             istioctl version
             mvn failsafe:integration-test failsafe:verify
+          environment:
+            K8S_CONTEXT: kind-c1
       - run:
           name: Delete Kind Cluster
           command: |
