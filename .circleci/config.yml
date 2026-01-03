@@ -105,7 +105,7 @@ jobs:
           name: Run Tests
           command: |
             istioctl version
-            mvn failsafe:integration-test failsafe:verify
+            mvn verify
           environment:
             K8S_CONTEXT: kind-c1
       - run:
