@@ -28,7 +28,7 @@ Add the dependency to your Maven `pom.xml`:
 <dependency>
   <groupId>com.github.piomin</groupId>
   <artifactId>istio-spring-boot-starter</artifactId>
-  <version>1.2.0</version>
+  <version>1.2.1</version>
 </dependency>
 ```
 
@@ -65,10 +65,10 @@ The `@EnableIstio` annotation provides the following configuration options:
 | Parameter              | Type    | Default | Description                                            |
 |------------------------|---------|---------|--------------------------------------------------------|
 | `version`              | String  | -       | (Required) Version label for the service               |
-| `numberOfRetries`      | int     | 0       | Number of retries for failed requests                  |
-| `timeout`              | int     | 0       | Request timeout in seconds (0 means no timeout)        |
+| `numberOfRetries`      | int     | 3       | Number of retries for failed requests                  |
+| `timeout`              | int     | 6000    | Request timeout in milliseconds (0 means no timeout)   |
 | `circuitBreakerErrors` | String  | -       | Number of errors in row to trip the circuit breaker    |
-| `weight`               | String  | 0       | A weight ot path in load balancing                     |
+| `weight`               | String  | 100     | A weight ot path in load balancing                     |
 | `enableGateway`        | boolean | false   | Enable Istio `Gateway` generation                      |
 | `fault`                | Fault   | @Fault  | Enable Istio fault (delay. abort) injection            |
 | `matches`              | Match[] | {}      | Enable multiple matches (e.g. uri, headers) generation |
