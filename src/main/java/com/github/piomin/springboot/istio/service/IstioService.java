@@ -10,6 +10,7 @@ import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 
@@ -103,6 +104,13 @@ public class IstioService {
                 .build();
     }
 
+    public HTTPRouteDestination buildRouteDestination(EnableIstio enableIstio) {
+        return new HTTPRouteDestinationBuilder()
+                .withDestination(buildDestination(enableIstio))
+                .withWeight(enableIstio.weight())
+                .build();
+    }
+
     public HTTPFaultInjection buildFault(EnableIstio enableIstio) {
         if (enableIstio.fault().type().equals(FaultType.ABORT))
             return new HTTPFaultInjectionBuilder()
@@ -124,6 +132,18 @@ public class IstioService {
                     .endHTTPFaultInjectionDelayFixedHttpType()
                     .endDelay()
                     .build();
+    }
+
+    public HTTPRoute buildRoute(EnableIstio enableIstio) {
+        return new HTTPRouteBuilder()
+                .withMatch(Arrays.stream(enableIstio.matches())
+                        .map(this::buildHTTPMatchRequest)
+                        .toArray(HTTPMatchRequest[]::new))
+                .withTimeout(enableIstio.timeout() == 0 ? null : formatDuration(enableIstio.timeout(),"s's'"))
+                .withFault(enableIstio.fault().percentage() == 0 ? null : buildFault(enableIstio))
+                .withRetries(buildRetry(enableIstio))
+                .withRoute(buildRouteDestination(enableIstio))
+                .build();
     }
 
 }

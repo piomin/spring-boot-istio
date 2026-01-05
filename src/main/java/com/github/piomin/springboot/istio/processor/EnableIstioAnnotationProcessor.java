@@ -86,7 +86,9 @@ public class EnableIstioAnnotationProcessor {
             Optional<Subset> subset = dr.getSpec().getSubsets().stream()
                     .filter(s -> s.getName().equals(enableIstioAnnotation.version()))
                     .findAny();
-            dr.getSpec().getSubsets().addAll(List.of(istioService.buildSubset(enableIstioAnnotation)));
+            if (subset.isEmpty()) {
+                dr.getSpec().getSubsets().add(istioService.buildSubset(enableIstioAnnotation));
+            }
             dr.getSpec().setTrafficPolicy(istioService.buildCircuitBreaker(enableIstioAnnotation));
             dr = istioClient.v1beta1().destinationRules().resource(dr).update();
             LOGGER.info("DestinationRule updated: \n{}", Serialization.asYaml(dr));
@@ -125,14 +127,30 @@ public class EnableIstioAnnotationProcessor {
         if (enableIstioAnnotation.enableGateway()) {
             vs.getSpec().setGateways(List.of(istioService.getApplicationName()));
         }
-        vs.getSpec().getHttp().get(0).setTimeout(enableIstioAnnotation
-                .timeout() == 0 ? null : formatDuration(enableIstioAnnotation.timeout(), "s's'"));
-        vs.getSpec().getHttp().get(0).setRetries(istioService.buildRetry(enableIstioAnnotation));
-        vs.getSpec().getHttp().get(0).setFault(enableIstioAnnotation.fault().percentage() == 0 ? null : istioService.buildFault(enableIstioAnnotation));
+//        vs.getSpec().getHttp().get(0).setTimeout(enableIstioAnnotation
+//                .timeout() == 0 ? null : formatDuration(enableIstioAnnotation.timeout(), "s's'"));
+//        vs.getSpec().getHttp().get(0).setRetries(istioService.buildRetry(enableIstioAnnotation));
+//        vs.getSpec().getHttp().get(0).setFault(enableIstioAnnotation.fault().percentage() == 0 ? null : istioService.buildFault(enableIstioAnnotation));
+
         if (!enableIstioAnnotation.version().isEmpty()) {
-            vs.getSpec().getHttp().get(0).getRoute().get(0).setWeight(enableIstioAnnotation.weight() == 0 ? null : enableIstioAnnotation.weight());
+            int index = findDestination(vs.getSpec().getHttp(), enableIstioAnnotation.version());
+            if (index != -1) {
+                vs.getSpec().getHttp().get(index).getRoute().getFirst()
+                        .setWeight(enableIstioAnnotation.weight() == 0 ? null : enableIstioAnnotation.weight());
+            } else {
+                if (enableIstioAnnotation.weight() == 100)
+                    vs.getSpec().getHttp().add(istioService.buildRoute(enableIstioAnnotation));
+                else
+                    vs.getSpec().getHttp().getFirst().getRoute()
+                            .add(istioService.buildRouteDestination(enableIstioAnnotation));
+            }
+        } else {
+            vs.getSpec().getHttp().get(0).setTimeout(enableIstioAnnotation
+                    .timeout() == 0 ? null : formatDuration(enableIstioAnnotation.timeout(), "s's'"));
+            vs.getSpec().getHttp().get(0).setRetries(istioService.buildRetry(enableIstioAnnotation));
+            vs.getSpec().getHttp().get(0).setFault(enableIstioAnnotation.fault().percentage() == 0 ? null : istioService.buildFault(enableIstioAnnotation));
+            vs.getSpec().getHttp().get(0).getRoute().get(0).setDestination(istioService.buildDestination(enableIstioAnnotation));
         }
-        vs.getSpec().getHttp().get(0).getRoute().get(0).setDestination(istioService.buildDestination(enableIstioAnnotation));
         vs = istioClient.v1beta1().virtualServices().resource(vs).update();
         LOGGER.info("VirtualService updated: \n{}", Serialization.asYaml(vs));
     }
@@ -175,6 +193,20 @@ public class EnableIstioAnnotationProcessor {
         else return new String[] { istioService.getApplicationName() };
     }
 
+    private int findDestination(List<HTTPRoute> routes, String version) {
+        if (routes == null || version == null || version.isEmpty()) {
+            return -1;
+        }
 
+        for (int i = 0; i < routes.size(); i++) {
+            HTTPRouteDestination dest = routes.get(i).getRoute().getFirst();
+            if (dest != null &&
+                    dest.getDestination() != null &&
+                    version.equals(dest.getDestination().getSubset())) {
+                return i;
+            }
+        }
+        return -1;
+    }
 
 }
