@@ -166,7 +166,7 @@ public class EnableIstioAnnotationProcessor {
                                 .withProtocol("HTTP")
                                 .withName("http")
                                 .build())
-                        .addToHosts(istioService.getApplicationName() + ".ext")
+                        .addToHosts(istioService.getApplicationName() + "." + enableIstioAnnotation.domain())
                         .build())
                 .endSpec()
                 .build();
@@ -178,7 +178,7 @@ public class EnableIstioAnnotationProcessor {
         LOGGER.info("Found Gateway: {}", gateway);
         if (gateway.getSpec().getServers() != null && !gateway.getSpec().getServers().isEmpty()) {
             Server server = gateway.getSpec().getServers().get(0);
-            String appHost = istioService.getApplicationName() + ".ext";
+            String appHost = istioService.getApplicationName() + "." + enableIstioAnnotation.domain();
             if (server.getHosts() != null && !server.getHosts().contains(appHost)) {
                 server.getHosts().add(appHost);
             }
@@ -189,7 +189,7 @@ public class EnableIstioAnnotationProcessor {
 
     private String[] addToHosts(EnableIstio enableIstioAnnotation) {
         if (enableIstioAnnotation.enableGateway())
-            return new String[] { istioService.getApplicationName(), istioService.getApplicationName() + ".ext"};
+            return new String[] { istioService.getApplicationName(), istioService.getApplicationName() + "." + enableIstioAnnotation.domain()};
         else return new String[] { istioService.getApplicationName() };
     }
 

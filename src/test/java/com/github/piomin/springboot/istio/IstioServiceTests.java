@@ -138,6 +138,11 @@ public class IstioServiceTests {
             public boolean enableGateway() {
                 return false;
             }
+
+            @Override
+            public String domain() {
+                return "ext";
+            }
         };
     }
 

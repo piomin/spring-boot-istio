@@ -73,6 +73,11 @@ public class EnableIstioAnnotationProcessorTests {
             public boolean enableGateway() {
                 return false;
             }
+
+            @Override
+            public String domain() {
+                return "ext";
+            }
         };
     }
 }

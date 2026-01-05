@@ -37,4 +37,6 @@ public @interface EnableIstio {
     Fault fault() default @Fault(percentage = 0);
 
     boolean enableGateway() default false;
+
+    String domain() default "ext";
 }
