@@ -28,7 +28,7 @@ Add the dependency to your Maven `pom.xml`:
 <dependency>
   <groupId>com.github.piomin</groupId>
   <artifactId>istio-spring-boot-starter</artifactId>
-  <version>1.2.1</version>
+  <version>1.2.2</version>
 </dependency>
 ```
 
@@ -72,6 +72,7 @@ The `@EnableIstio` annotation provides the following configuration options:
 | `enableGateway`        | boolean | false   | Enable Istio `Gateway` generation                      |
 | `fault`                | Fault   | @Fault  | Enable Istio fault (delay. abort) injection            |
 | `matches`              | Match[] | {}      | Enable multiple matches (e.g. uri, headers) generation |
+| `domain`               | String  | ext     | The name of domain used host                           |
 
 ### How It Works
 
