@@ -15,7 +15,6 @@ import io.fabric8.istio.api.networking.v1beta1.GatewayBuilder;
 import io.fabric8.istio.api.networking.v1beta1.VirtualService;
 import io.fabric8.istio.api.networking.v1beta1.VirtualServiceBuilder;
 import io.fabric8.istio.client.IstioClient;
-import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +57,7 @@ public class EnableIstioAnnotationProcessor {
             editVirtualService(enableIstioAnnotation, vs);
         }
 
-        if (enableIstioAnnotation.enableGateway()) {
+        if (istioService.isEnableGateway(enableIstioAnnotation)) {
             Gateway gateway = istioClient
                     .v1beta1()
                     .gateways()
@@ -73,7 +72,7 @@ public class EnableIstioAnnotationProcessor {
     }
 
     private void createNewDestinationRule(EnableIstio enableIstioAnnotation) {
-        if (enableIstioAnnotation.version().isEmpty())
+        if (istioService.getVersion(enableIstioAnnotation).isEmpty())
             return;
         DestinationRule dr = new DestinationRuleBuilder()
                 .withMetadata(istioService.buildDestinationRuleMetadata())
@@ -89,9 +88,9 @@ public class EnableIstioAnnotationProcessor {
 
     private void editDestinationRule(EnableIstio enableIstioAnnotation, DestinationRule dr) {
         LOGGER.info("Found DestinationRule: {}", dr);
-        if (!enableIstioAnnotation.version().isEmpty()) {
+        if (!istioService.getVersion(enableIstioAnnotation).isEmpty()) {
             Optional<Subset> subset = dr.getSpec().getSubsets().stream()
-                    .filter(s -> s.getName().equals(enableIstioAnnotation.version()))
+                    .filter(s -> s.getName().equals(istioService.getVersion(enableIstioAnnotation)))
                     .findAny();
             if (subset.isEmpty()) {
                 dr.getSpec().getSubsets().add(istioService.buildSubset(enableIstioAnnotation));
@@ -108,19 +107,18 @@ public class EnableIstioAnnotationProcessor {
                 .withNewMetadata().withName(istioService.getVirtualServiceName()).endMetadata()
                 .withNewSpec()
                 .withHosts(addToHosts(enableIstioAnnotation))
-//                .withGateways(enableIstioAnnotation.enableGateway() ? istioService.getApplicationName() : "null")
                 .addNewHttp()
-                .withMatch(Arrays.stream(enableIstioAnnotation.matches())
+                .withMatch(Arrays.stream(istioService.getMatches(enableIstioAnnotation))
                         .map(istioService::buildHTTPMatchRequest)
                         .toArray(HTTPMatchRequest[]::new))
-                .withTimeout(enableIstioAnnotation.timeout() == 0 ? null : formatDuration(enableIstioAnnotation.timeout(), "s's'"))
-                .withFault(enableIstioAnnotation.fault().percentage() == 0 ? null : istioService.buildFault(enableIstioAnnotation))
+                .withTimeout(istioService.getTimeout(enableIstioAnnotation) == 0 ? null : formatDuration(istioService.getTimeout(enableIstioAnnotation), "s's'"))
+                .withFault(istioService.getFaultPercentage(enableIstioAnnotation) == 0 ? null : istioService.buildFault(enableIstioAnnotation))
                 .withRetries(istioService.buildRetry(enableIstioAnnotation))
                 .addNewRoute().withNewDestinationLike(istioService.buildDestination(enableIstioAnnotation))
                 .endDestination().endRoute()
                 .endHttp()
                 .endSpec();
-        if (enableIstioAnnotation.enableGateway()) {
+        if (istioService.isEnableGateway(enableIstioAnnotation)) {
             vsBuilder = vsBuilder.editSpec().withGateways(istioService.getApplicationName()).endSpec();
         }
         VirtualService vs = vsBuilder.build();
@@ -131,31 +129,26 @@ public class EnableIstioAnnotationProcessor {
     private void editVirtualService(EnableIstio enableIstioAnnotation, VirtualService vs) {
         LOGGER.info("Found VirtualService: {}", vs);
         vs.getSpec().setHosts(List.of(addToHosts(enableIstioAnnotation)));
-        if (enableIstioAnnotation.enableGateway()) {
+        if (istioService.isEnableGateway(enableIstioAnnotation)) {
             vs.getSpec().setGateways(List.of(istioService.getApplicationName()));
         }
-//        vs.getSpec().getHttp().get(0).setTimeout(enableIstioAnnotation
-//                .timeout() == 0 ? null : formatDuration(enableIstioAnnotation.timeout(), "s's'"));
-//        vs.getSpec().getHttp().get(0).setRetries(istioService.buildRetry(enableIstioAnnotation));
-//        vs.getSpec().getHttp().get(0).setFault(enableIstioAnnotation.fault().percentage() == 0 ? null : istioService.buildFault(enableIstioAnnotation));
 
-        if (!enableIstioAnnotation.version().isEmpty()) {
-            int index = findDestination(vs.getSpec().getHttp(), enableIstioAnnotation.version());
+        if (!istioService.getVersion(enableIstioAnnotation).isEmpty()) {
+            int index = findDestination(vs.getSpec().getHttp(), istioService.getVersion(enableIstioAnnotation));
             if (index != -1) {
                 vs.getSpec().getHttp().get(index).getRoute().getFirst()
-                        .setWeight(enableIstioAnnotation.weight() == 0 ? null : enableIstioAnnotation.weight());
+                        .setWeight(istioService.getWeight(enableIstioAnnotation) == 0 ? null : istioService.getWeight(enableIstioAnnotation));
             } else {
-                if (enableIstioAnnotation.weight() == 100)
+                if (istioService.getWeight(enableIstioAnnotation) == 100)
                     vs.getSpec().getHttp().add(istioService.buildRoute(enableIstioAnnotation));
                 else
                     vs.getSpec().getHttp().getFirst().getRoute()
                             .add(istioService.buildRouteDestination(enableIstioAnnotation));
             }
         } else {
-            vs.getSpec().getHttp().get(0).setTimeout(enableIstioAnnotation
-                    .timeout() == 0 ? null : formatDuration(enableIstioAnnotation.timeout(), "s's'"));
+            vs.getSpec().getHttp().get(0).setTimeout(istioService.getTimeout(enableIstioAnnotation) == 0 ? null : formatDuration(istioService.getTimeout(enableIstioAnnotation), "s's'"));
             vs.getSpec().getHttp().get(0).setRetries(istioService.buildRetry(enableIstioAnnotation));
-            vs.getSpec().getHttp().get(0).setFault(enableIstioAnnotation.fault().percentage() == 0 ? null : istioService.buildFault(enableIstioAnnotation));
+            vs.getSpec().getHttp().get(0).setFault(istioService.getFaultPercentage(enableIstioAnnotation) == 0 ? null : istioService.buildFault(enableIstioAnnotation));
             vs.getSpec().getHttp().get(0).getRoute().get(0).setDestination(istioService.buildDestination(enableIstioAnnotation));
         }
         vs = istioClient.v1beta1().virtualServices().resource(vs).update();
@@ -173,7 +166,7 @@ public class EnableIstioAnnotationProcessor {
                                 .withProtocol("HTTP")
                                 .withName("http")
                                 .build())
-                        .addToHosts(istioService.getApplicationName() + "." + enableIstioAnnotation.domain())
+                        .addToHosts(istioService.getApplicationName() + "." + istioService.getDomain(enableIstioAnnotation))
                         .build())
                 .endSpec()
                 .build();
@@ -185,7 +178,7 @@ public class EnableIstioAnnotationProcessor {
         LOGGER.info("Found Gateway: {}", gateway);
         if (gateway.getSpec().getServers() != null && !gateway.getSpec().getServers().isEmpty()) {
             Server server = gateway.getSpec().getServers().get(0);
-            String appHost = istioService.getApplicationName() + "." + enableIstioAnnotation.domain();
+            String appHost = istioService.getApplicationName() + "." + istioService.getDomain(enableIstioAnnotation);
             if (server.getHosts() != null && !server.getHosts().contains(appHost)) {
                 server.getHosts().add(appHost);
             }
@@ -195,8 +188,8 @@ public class EnableIstioAnnotationProcessor {
     }
 
     private String[] addToHosts(EnableIstio enableIstioAnnotation) {
-        if (enableIstioAnnotation.enableGateway())
-            return new String[] { istioService.getApplicationName(), istioService.getApplicationName() + "." + enableIstioAnnotation.domain()};
+        if (istioService.isEnableGateway(enableIstioAnnotation))
+            return new String[] { istioService.getApplicationName(), istioService.getApplicationName() + "." + istioService.getDomain(enableIstioAnnotation)};
         else return new String[] { istioService.getApplicationName() };
     }
 
