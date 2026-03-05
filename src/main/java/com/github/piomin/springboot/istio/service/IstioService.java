@@ -5,11 +5,14 @@ import com.github.piomin.springboot.istio.annotation.Match;
 import com.github.piomin.springboot.istio.annotation.MatchMode;
 import com.github.piomin.springboot.istio.annotation.MatchType;
 import com.github.piomin.springboot.istio.annotation.FaultType;
+import com.github.piomin.springboot.istio.config.IstioProperties;
 import io.fabric8.istio.api.networking.v1beta1.*;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
@@ -25,6 +28,9 @@ public class IstioService {
     @Value("${spring.application.name}")
     private Optional<String> applicationName;
 
+    @Autowired(required = false)
+    private IstioProperties properties;
+
     public String getApplicationName() {
         return applicationName.orElse("default");
     }
@@ -37,6 +43,75 @@ public class IstioService {
         return getApplicationName() + "-route";
     }
 
+    public int getTimeout(EnableIstio e) {
+        return properties != null && properties.getTimeout() != null ? properties.getTimeout() : e.timeout();
+    }
+
+    public String getVersion(EnableIstio e) {
+        return properties != null && properties.getVersion() != null ? properties.getVersion() : e.version();
+    }
+
+    public int getWeight(EnableIstio e) {
+        return properties != null && properties.getWeight() != null ? properties.getWeight() : e.weight();
+    }
+
+    public int getNumberOfRetries(EnableIstio e) {
+        return properties != null && properties.getNumberOfRetries() != null ? properties.getNumberOfRetries() : e.numberOfRetries();
+    }
+
+    public int getCircuitBreakerErrors(EnableIstio e) {
+        return properties != null && properties.getCircuitBreakerErrors() != null ? properties.getCircuitBreakerErrors() : e.circuitBreakerErrors();
+    }
+
+    public boolean isEnableGateway(EnableIstio e) {
+        return properties != null && properties.getEnableGateway() != null ? properties.getEnableGateway() : e.enableGateway();
+    }
+
+    public String getDomain(EnableIstio e) {
+        return properties != null && properties.getDomain() != null ? properties.getDomain() : e.domain();
+    }
+
+    public int getFaultPercentage(EnableIstio e) {
+        if (properties != null && properties.getFault() != null && properties.getFault().getPercentage() != null)
+            return properties.getFault().getPercentage();
+        return e.fault() != null ? e.fault().percentage() : 0;
+    }
+
+    private FaultType getFaultType(EnableIstio e) {
+        if (properties != null && properties.getFault() != null && properties.getFault().getType() != null)
+            return properties.getFault().getType();
+        return e.fault() != null ? e.fault().type() : FaultType.ABORT;
+    }
+
+    private int getFaultHttpStatus(EnableIstio e) {
+        if (properties != null && properties.getFault() != null && properties.getFault().getHttpStatus() != null)
+            return properties.getFault().getHttpStatus();
+        return e.fault() != null ? e.fault().httpStatus() : 500;
+    }
+
+    private long getFaultDelay(EnableIstio e) {
+        if (properties != null && properties.getFault() != null && properties.getFault().getDelay() != null)
+            return properties.getFault().getDelay();
+        return e.fault() != null ? e.fault().delay() : 0;
+    }
+
+    public Match[] getMatches(EnableIstio e) {
+        if (properties != null && !properties.getMatches().isEmpty())
+            return properties.getMatches().stream().map(this::toMatch).toArray(Match[]::new);
+        return e.matches();
+    }
+
+    private Match toMatch(IstioProperties.MatchProperties mp) {
+        return new Match() {
+            @Override public Class<? extends Annotation> annotationType() { return Match.class; }
+            @Override public boolean ignoreUriCase() { return mp.isIgnoreUriCase(); }
+            @Override public MatchType type() { return mp.getType(); }
+            @Override public MatchMode mode() { return mp.getMode(); }
+            @Override public String value() { return mp.getValue(); }
+            @Override public String key() { return mp.getKey(); }
+        };
+    }
+
     public ObjectMeta buildDestinationRuleMetadata() {
         return new ObjectMetaBuilder().withName(getDestinationRuleName()).build();
     }
@@ -44,10 +119,10 @@ public class IstioService {
     public TrafficPolicy buildCircuitBreaker(EnableIstio enableIstio) {
         TrafficPolicyBuilder builder = new TrafficPolicyBuilder()
                 .withConnectionPool(new ConnectionPoolSettingsBuilder().withNewHttp().endHttp().build());
-        if (enableIstio.circuitBreakerErrors() == 0)
+        if (getCircuitBreakerErrors(enableIstio) == 0)
             return builder.build();
         else return builder.withOutlierDetection(new OutlierDetectionBuilder()
-                        .withConsecutive5xxErrors(enableIstio.circuitBreakerErrors())
+                        .withConsecutive5xxErrors(getCircuitBreakerErrors(enableIstio))
                         .withBaseEjectionTime(CIRCUIT_OPEN_TIME)
                         .withMaxEjectionPercent(MAX_DISABLED_HOSTS_PERCENTAGE)
                         .build())
@@ -56,8 +131,8 @@ public class IstioService {
 
     public Subset buildSubset(EnableIstio enableIstio) {
         return new SubsetBuilder()
-                .withName(enableIstio.version())
-                .addToLabels("version", enableIstio.version())
+                .withName(getVersion(enableIstio))
+                .addToLabels("version", getVersion(enableIstio))
                 .build();
     }
 
@@ -86,13 +161,13 @@ public class IstioService {
     }
 
     public HTTPRetry buildRetry(EnableIstio enableIstio) {
-        if (enableIstio.numberOfRetries() == 0)
+        if (getNumberOfRetries(enableIstio) == 0)
             return null;
-        long ratioTimeout = Math.round((float) enableIstio.timeout() / enableIstio.numberOfRetries());
+        long ratioTimeout = Math.round((float) getTimeout(enableIstio) / getNumberOfRetries(enableIstio));
         return new HTTPRetryBuilder()
-                .withAttempts(enableIstio.numberOfRetries())
+                .withAttempts(getNumberOfRetries(enableIstio))
                 .withRetryOn(RETRY_CODES)
-                .withPerTryTimeout(enableIstio.timeout() != 0 ?
+                .withPerTryTimeout(getTimeout(enableIstio) != 0 ?
                         formatDuration(ratioTimeout, "s's'") : null)
                 .build();
     }
@@ -100,35 +175,35 @@ public class IstioService {
     public Destination buildDestination(EnableIstio enableIstio) {
         return new DestinationBuilder()
                 .withHost(getApplicationName())
-                .withSubset(enableIstio.version())
+                .withSubset(getVersion(enableIstio))
                 .build();
     }
 
     public HTTPRouteDestination buildRouteDestination(EnableIstio enableIstio) {
         return new HTTPRouteDestinationBuilder()
                 .withDestination(buildDestination(enableIstio))
-                .withWeight(enableIstio.weight())
+                .withWeight(getWeight(enableIstio))
                 .build();
     }
 
     public HTTPFaultInjection buildFault(EnableIstio enableIstio) {
-        if (enableIstio.fault().type().equals(FaultType.ABORT))
+        if (getFaultType(enableIstio).equals(FaultType.ABORT))
             return new HTTPFaultInjectionBuilder()
                     .withNewAbort()
                     .withNewPercentage()
-                        .withValue((double) enableIstio.fault().percentage())
+                        .withValue((double) getFaultPercentage(enableIstio))
                     .endPercentage()
-                    .withNewHTTPFaultInjectionAbortHttpStatusErrorType(enableIstio.fault().httpStatus())
+                    .withNewHTTPFaultInjectionAbortHttpStatusErrorType(getFaultHttpStatus(enableIstio))
                     .endAbort()
                     .build();
         else
             return new HTTPFaultInjectionBuilder()
                     .withNewDelay()
                     .withNewPercentage()
-                        .withValue((double) enableIstio.fault().percentage())
+                        .withValue((double) getFaultPercentage(enableIstio))
                     .endPercentage()
                     .withNewHTTPFaultInjectionDelayFixedHttpType()
-                        .withFixedDelay(formatDuration(enableIstio.fault().delay(), "s's'"))
+                        .withFixedDelay(formatDuration(getFaultDelay(enableIstio), "s's'"))
                     .endHTTPFaultInjectionDelayFixedHttpType()
                     .endDelay()
                     .build();
@@ -136,11 +211,11 @@ public class IstioService {
 
     public HTTPRoute buildRoute(EnableIstio enableIstio) {
         return new HTTPRouteBuilder()
-                .withMatch(Arrays.stream(enableIstio.matches())
+                .withMatch(Arrays.stream(getMatches(enableIstio))
                         .map(this::buildHTTPMatchRequest)
                         .toArray(HTTPMatchRequest[]::new))
-                .withTimeout(enableIstio.timeout() == 0 ? null : formatDuration(enableIstio.timeout(),"s's'"))
-                .withFault(enableIstio.fault().percentage() == 0 ? null : buildFault(enableIstio))
+                .withTimeout(getTimeout(enableIstio) == 0 ? null : formatDuration(getTimeout(enableIstio), "s's'"))
+                .withFault(getFaultPercentage(enableIstio) == 0 ? null : buildFault(enableIstio))
                 .withRetries(buildRetry(enableIstio))
                 .withRoute(buildRouteDestination(enableIstio))
                 .build();
