@@ -1,5 +1,14 @@
 # Skills
 
+Load all skills from .claude/skills/.
+
+To use a skill, load it first, then invoke with natural language. Each skill is one independent capability.
+
+When solving problems:
+1. Search there first
+2. Extend existing skills
+3. Do not bypass them
+
 # Project Instructions
 
 1. Minimize the amount of code generated.

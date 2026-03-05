@@ -74,6 +74,43 @@ The `@EnableIstio` annotation provides the following configuration options:
 | `matches`              | Match[] | {}      | Enable multiple matches (e.g. uri, headers) generation |
 | `domain`               | String  | ext     | The name of domain used host                           |
 
+### Spring Configuration Properties
+
+All `@EnableIstio` fields can be overridden via `application.properties` / `application.yml` using the prefix `istio.spring`. Properties take precedence over annotation values when set.
+
+| Property                             | Type    | Description                                  |
+|--------------------------------------|---------|----------------------------------------------|
+| `istio.spring.timeout`               | Integer | Request timeout in milliseconds              |
+| `istio.spring.version`               | String  | Version label for the service                |
+| `istio.spring.weight`                | Integer | Weight for load balancing (0–100)            |
+| `istio.spring.number-of-retries`     | Integer | Number of retries for failed requests        |
+| `istio.spring.circuit-breaker-errors`| Integer | Consecutive 5xx errors to trip circuit breaker |
+| `istio.spring.enable-gateway`        | Boolean | Enable Istio Gateway generation              |
+| `istio.spring.domain`                | String  | Domain name for gateway hosts                |
+| `istio.spring.fault.type`            | FaultType | Fault type: `ABORT` or `DELAY`             |
+| `istio.spring.fault.percentage`      | Integer | Fault injection percentage (0–100)           |
+| `istio.spring.fault.http-status`     | Integer | HTTP status code for ABORT fault             |
+| `istio.spring.fault.delay`           | Long    | Delay in milliseconds for DELAY fault        |
+| `istio.spring.matches[n].value`      | String  | Match value (e.g. URI path)                  |
+| `istio.spring.matches[n].type`       | MatchType | Match type: `URI`, `HEADERS`, `METHOD`, etc. |
+| `istio.spring.matches[n].mode`       | MatchMode | Match mode: `PREFIX`, `EXACT`, `REGEX`     |
+| `istio.spring.matches[n].key`        | String  | Key for header/query/label matches           |
+
+Example:
+```yaml
+istio:
+  spring:
+    version: v1
+    timeout: 3000
+    number-of-retries: 2
+    enable-gateway: true
+    domain: example.com
+    fault:
+      type: ABORT
+      percentage: 10
+      http-status: 503
+```
+
 ### How It Works
 
 The library automatically creates the following Istio resources during application startup:
