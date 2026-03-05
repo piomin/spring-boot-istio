@@ -28,7 +28,7 @@ Add the dependency to your Maven `pom.xml`:
 <dependency>
   <groupId>com.github.piomin</groupId>
   <artifactId>istio-spring-boot-starter</artifactId>
-  <version>1.2.2</version>
+  <version>2.0.0</version>
 </dependency>
 ```
 
@@ -116,9 +116,9 @@ istio:
 The library automatically creates the following Istio resources during application startup:
 
 `DestinationRule`: Defines policies for traffic routing, including load balancing and connection pool settings.\
-`VirtualService`: Configures request routing, retries, timeouts, matches, and fault injection.
+`VirtualService`: Configures request routing, retries, timeouts, matches, and fault injection.\
 `Gateway`: Exposes the service to external traffic.
 
-Here's the architecture of presented solution. Spring Boot Istio Library is included to the target application. It uses Java Istio Client to communication with istiod. During application startup the library is communicating with Istio API in order to create `DestinationRule` and `VirtualService` objects.
+Here's the architecture of a presented solution. Spring Boot Istio Library is included in the target application. It uses Java Istio Client to communication with istiod. During application startup the library is communicating with Istio API to create `DestinationRule` and `VirtualService` objects.
 
 <img src="https://piotrminkowski.files.wordpress.com/2020/06/spring-boot-istio-arch-2.png" title="Architecture"><br/>
