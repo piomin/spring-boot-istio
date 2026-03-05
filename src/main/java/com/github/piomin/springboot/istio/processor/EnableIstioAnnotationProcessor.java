@@ -6,7 +6,14 @@ import java.util.Optional;
 
 import com.github.piomin.springboot.istio.annotation.EnableIstio;
 import com.github.piomin.springboot.istio.service.IstioService;
+import io.fabric8.istio.api.api.networking.v1alpha3.*;
 import io.fabric8.istio.api.networking.v1beta1.*;
+import io.fabric8.istio.api.networking.v1beta1.DestinationRule;
+import io.fabric8.istio.api.networking.v1beta1.DestinationRuleBuilder;
+import io.fabric8.istio.api.networking.v1beta1.Gateway;
+import io.fabric8.istio.api.networking.v1beta1.GatewayBuilder;
+import io.fabric8.istio.api.networking.v1beta1.VirtualService;
+import io.fabric8.istio.api.networking.v1beta1.VirtualServiceBuilder;
 import io.fabric8.istio.client.IstioClient;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.utils.Serialization;
@@ -162,7 +169,7 @@ public class EnableIstioAnnotationProcessor {
                 .addToSelector("istio", "ingressgateway")
                 .addToServers(new ServerBuilder()
                         .withPort(new PortBuilder()
-                                .withNumber(80)
+                                .withNumber(80L)
                                 .withProtocol("HTTP")
                                 .withName("http")
                                 .build())
