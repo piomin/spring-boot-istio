@@ -6,7 +6,7 @@ import com.github.piomin.springboot.istio.annotation.MatchMode;
 import com.github.piomin.springboot.istio.annotation.MatchType;
 import com.github.piomin.springboot.istio.annotation.FaultType;
 import com.github.piomin.springboot.istio.config.IstioProperties;
-import io.fabric8.istio.api.networking.v1beta1.*;
+import io.fabric8.istio.api.api.networking.v1alpha3.*;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -202,9 +202,9 @@ public class IstioService {
                     .withNewPercentage()
                         .withValue((double) getFaultPercentage(enableIstio))
                     .endPercentage()
-                    .withNewHTTPFaultInjectionDelayFixedHttpType()
+                    .withNewHTTPFaultInjectionDelayFixedDelayHttpType()
                         .withFixedDelay(formatDuration(getFaultDelay(enableIstio), "s's'"))
-                    .endHTTPFaultInjectionDelayFixedHttpType()
+                    .endHTTPFaultInjectionDelayFixedDelayHttpType()
                     .endDelay()
                     .build();
     }
