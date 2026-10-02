@@ -136,13 +136,13 @@ public class EnableIstioAnnotationProcessor {
         if (!istioService.getVersion(enableIstioAnnotation).isEmpty()) {
             int index = findDestination(vs.getSpec().getHttp(), istioService.getVersion(enableIstioAnnotation));
             if (index != -1) {
-                vs.getSpec().getHttp().get(index).getRoute().getFirst()
+                vs.getSpec().getHttp().get(index).getRoute().get(0)
                         .setWeight(istioService.getWeight(enableIstioAnnotation) == 0 ? null : istioService.getWeight(enableIstioAnnotation));
             } else {
                 if (istioService.getWeight(enableIstioAnnotation) == 100)
                     vs.getSpec().getHttp().add(istioService.buildRoute(enableIstioAnnotation));
                 else
-                    vs.getSpec().getHttp().getFirst().getRoute()
+                    vs.getSpec().getHttp().get(0).getRoute()
                             .add(istioService.buildRouteDestination(enableIstioAnnotation));
             }
         } else {
@@ -199,7 +199,7 @@ public class EnableIstioAnnotationProcessor {
         }
 
         for (int i = 0; i < routes.size(); i++) {
-            HTTPRouteDestination dest = routes.get(i).getRoute().getFirst();
+            HTTPRouteDestination dest = routes.get(i).getRoute().get(0);
             if (dest != null &&
                     dest.getDestination() != null &&
                     version.equals(dest.getDestination().getSubset())) {
