@@ -1,46 +1,38 @@
-name: OpenCode review
+name: Trigger OpenCode review
 
 on:
-  workflow_dispatch:
-    inputs:
-      pr_number:
-        description: "Pull request number"
-        required: true
-        type: string
+  pull_request:
+    types: [opened]
 
 jobs:
-  review:
+  trigger:
+    if: endsWith(github.event.pull_request.user.login, '[bot]')
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Trigger OpenCode Review [Bot]
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          gh workflow run opencode-review.yml \
+            --repo "$REPO" \
+            --ref "${{ github.event.repository.default_branch }}" \
+            -f pr_number="$PR_NUMBER"
 
+  human-pr-review:
+    if: "!endsWith(github.event.pull_request.user.login, '[bot]')"
+    runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
       pull-requests: write
       issues: write
-
     steps:
-      - name: Get PR information
-        id: pr
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ inputs.pr_number }}
-          REPO: ${{ github.repository }}
-        run: |
-          set -euo pipefail
-    
-          echo "number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
-    
-          gh pr view "$PR_NUMBER" \
-            --repo "$REPO" \
-            --json url,title,headRefName,baseRefName \
-            > "$RUNNER_TEMP/pr.json"
-    
-          cat "$RUNNER_TEMP/pr.json"
-
-      - name: Checkout PR
-        uses: actions/checkout@v7
+      - uses: actions/checkout@v7
         with:
-          ref: refs/pull/${{ inputs.pr_number }}/head
           persist-credentials: false
 
       - name: Create Google credentials
@@ -51,30 +43,25 @@ jobs:
           printf '%s' "$GCP_SERVICE_ACCOUNT_JSON" \
             > "$RUNNER_TEMP/gcp-credentials.json"
 
-      - name: Run OpenCode
-        uses: anomalyco/opencode/github@latest
+      - uses: anomalyco/opencode/github@latest
         env:
           GOOGLE_VERTEX_PROJECT: ${{ secrets.GOOGLE_VERTEX_PROJECT }}
           GOOGLE_VERTEX_LOCATION: ${{ secrets.GOOGLE_VERTEX_LOCATION }}
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/gcp-credentials.json
           GITHUB_TOKEN: ${{ github.token }}
         with:
-          model: google-vertex-anthropic/claude-sonnet-4-6@default
+          model: google-vertex-anthropic/claude-opus-4-6@default
           use_github_token: true
           prompt: |
-            Review pull request #${{ inputs.pr_number }}.
-    
-            Repository: ${{ github.repository }}
-    
-            Review the checked-out pull request for:
+            Review this pull request for:
             - potential bugs
             - correctness issues
             - security problems
             - code quality issues
             - problematic edge cases
             - unnecessary complexity
-    
+            
             Focus on actionable findings that are relevant to the
             changes in this pull request.
-    
-            Post the review findings to pull request #${{ inputs.pr_number }}.
+            
+            Post the review findings.
